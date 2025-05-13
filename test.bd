@@ -1,0 +1,64 @@
+program BabyDuck;
+
+var
+    globalCounter, counter, loopIndex: int;
+    totalSum, averageResult, temporaryValue: float;
+
+void processInputs(floatInput: float, intInput: int) [
+    var
+        sumResult, rowIndex, columnIndex: int;
+        computedFloat: float;
+
+    {
+        rowIndex = 1;
+        columnIndex = 2;
+        sumResult = 0;
+        computedFloat = 3.0;
+        globalCounter = floatInput + 1;
+    }
+];
+
+void processSecondaryInputs(floatInput: float, intInput: int) [
+    var
+        sumResult, rowIndex, columnIndex: int;
+        computedFloat: float;
+
+    {
+        rowIndex = 1;
+        columnIndex = 2;
+        sumResult = 0;
+        computedFloat = 3.0;
+        globalCounter = floatInput + 1;
+        pi : int = 10;
+    }
+];
+
+main
+{
+    totalSum = 1 + 2;
+    globalCounter = (1 + 2) / 3;
+
+    counter = 1;
+
+    print(totalSum > abc);
+    print(totalSum + 45);
+
+    if (yy > 10) {
+        print("counter is 1");
+    } else {
+        print("counter is not 1");
+    };
+
+    loopIndex = 2;
+
+    while (zz < 10) do {
+        loopIndex = loopIndex + 1;
+        print(loopIndex);
+    };
+
+
+    processInputs(1.0, 2.0);
+    processSecondaryInputs(1.0, 1);
+}
+
+end
