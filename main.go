@@ -10,10 +10,22 @@ import (
 // printSymbolTable displays the contents of the function directory,
 // showing all variables and their details for each scope.
 func printSymbolTable(directory *symbols.FunctionDirectory) {
-	for scope, variables := range directory.Directory {
+	for scope, funcInfo := range directory.Directory {
 		fmt.Printf("Scope (Function Name): %s\n", scope)
-		for varName, varDetails := range variables {
-			fmt.Printf("Variable: %s, Details: %v\n", varName, varDetails)
+
+		if len(funcInfo.Params) > 0 {
+			fmt.Println("  Parameters:")
+			for _, param := range funcInfo.Params {
+				fmt.Printf("    - Name: (unknown), Type: %s\n", param.Type) // Si guardas nombre, cámbialo aquí
+			}
+		}
+
+		if len(funcInfo.Variables) > 0 {
+			fmt.Println("  Variables:")
+			for varName, varDetails := range funcInfo.Variables {
+				fmt.Printf("    - %s: Type=%s, Address=%d\n",
+					varName, varDetails.Type, varDetails.MemoryAddress)
+			}
 		}
 		fmt.Println()
 	}

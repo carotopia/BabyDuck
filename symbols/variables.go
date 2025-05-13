@@ -21,14 +21,13 @@ func (fd *FunctionDirectory) AddVariable(name string, varType string) error {
 	}
 
 	context := fd.CurrentScope[len(fd.CurrentScope)-1]
-	varTable := fd.Directory[context]
-
-	if _, exists := varTable[name]; exists {
-		return fmt.Errorf("error: variable '%s' already declared in scope '%s'", name, context)
+	funcInfo, exists := fd.Directory[context]
+	if !exists {
+		return fmt.Errorf("error: function '%s' is not declared", context)
 	}
 	mockAddress := 1000 + len(varType)
 
-	varTable[name] = Variable{
+	funcInfo.Variables[name] = Variable{
 		Type:          varType,
 		Value:         nil,
 		MemoryAddress: mockAddress,
@@ -55,11 +54,12 @@ func (fd *FunctionDirectory) ValidateVariable(scopes []string, name string) erro
 // Looks for variable in a specific scope
 // Returns the type and wether it was found or not
 func (fd *FunctionDirectory) FindVariable(scope string, name string) (string, bool) {
-	varTable, scopeExists := fd.Directory[scope]
+	funcInfo, scopeExists := fd.Directory[scope]
 	if !scopeExists {
 		return "", false
 	}
 
-	variable, varExists := varTable[name]
+	variable, varExists := funcInfo.Variables[name]
 	return variable.Type, varExists
+
 }

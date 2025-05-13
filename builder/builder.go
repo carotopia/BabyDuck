@@ -31,11 +31,26 @@ func NewDirectoryBuilder(debug bool) *DirectoryBuilder {
 // Makes push to function name, now is in the scope
 func (d *DirectoryBuilder) EnterFunc(ctx *grammar.FuncContext) {
 	functionName := ctx.ID().GetText()
-	fmt.Printf("Function '%s' already declared in current scope\n", functionName)
-	err := d.Directory.AddFunction(functionName)
+
+	// Recolectar parámetros
+	var params []symbols.Variable
+	if ctx.Param_list() != nil {
+		paramListCtx := ctx.Param_list().(*grammar.Param_listContext)
+		for _, paramCtx := range paramListCtx.AllParam() {
+			param := paramCtx.(*grammar.ParamContext)
+			varType := param.Type_().GetText()
+			params = append(params, symbols.Variable{
+				Type: varType,
+			})
+		}
+	}
+
+	err := d.Directory.AddFunction(functionName, params)
 	if err != nil {
 		d.Errors = append(d.Errors, err.Error())
 	}
+
+	// Agregar a scope
 	d.Directory.CurrentScope = append(d.Directory.CurrentScope, functionName)
 }
 
@@ -60,7 +75,6 @@ func (d *DirectoryBuilder) ExitVar_decl(ctx *grammar.Var_declContext) {
 }
 
 // EnterParam when entering a new function tries to add it to the current scope
-
 func (d *DirectoryBuilder) EnterParam(ctx *grammar.ParamContext) {
 	paramName := ctx.ID().GetText()
 	paramType := ctx.Type_().GetText()
@@ -82,8 +96,10 @@ func (d *DirectoryBuilder) ExitAssign(ctx *grammar.AssignContext) {
 		d.Errors = append(d.Errors, err.Error())
 	}
 }
+
+// ExitExpression
 func (d *DirectoryBuilder) ExitExpression(ctx *grammar.ExpressionContext) {
-	// Valida los lados de la comparación
+
 	if ctx.Relational() != nil {
 		left := ctx.Exp()
 		right := ctx.Relational().Exp()
@@ -185,31 +201,23 @@ func (d *DirectoryBuilder) ExitCondition(ctx *grammar.ConditionContext) {
 	}
 }
 
+// ExitF_call checks if the function exists and if the number of arguments is correct
 func (d *DirectoryBuilder) ExitF_call(ctx *grammar.F_callContext) {
+	// Obtener el nombre de la función desde el contexto
 	funcName := ctx.ID().GetText()
-	funcDir := d.Directory.Directory
 
-	// 1. Verifica si existe la función
-	paramTable, exists := funcDir[funcName]
-	if !exists {
-		d.Errors = append(d.Errors, fmt.Sprintf("error: function '%s' not defined", funcName))
-		return
-	}
-
-	// 2. Cuenta los argumentos enviados
-	argCount := 0
+	// Obtener el número de argumentos
+	numArgs := 0
 	if ctx.Arg_list() != nil {
-		for _, exp := range ctx.Arg_list().AllExpression() {
-			d.validateExpression(exp)
-			argCount++
+		// Recorrer todas las expresiones dentro de Arg_list
+		for _ = range ctx.Arg_list().(*grammar.Arg_listContext).AllExpression() {
+			numArgs++
 		}
 	}
 
-	// 3. Compara cantidad de argumentos enviados con los declarados
-	paramCount := len(paramTable) // parámetros están guardados como variables dentro del scope de la función
-
-	if argCount != paramCount {
-		d.Errors = append(d.Errors,
-			fmt.Sprintf("error: function '%s' expects %d arguments, got %d", funcName, paramCount, argCount))
+	// Validar la llamada de la función con la cantidad de argumentos
+	if err := d.Directory.ValidateFunctionCall(funcName, numArgs); err != nil {
+		// Si hay un error en la validación, agregarlo a la lista de errores
+		d.Errors = append(d.Errors, err.Error())
 	}
 }
