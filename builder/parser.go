@@ -3,7 +3,6 @@ package builder
 import (
 	"BabyDuckCompiler/grammar"
 	"BabyDuckCompiler/symbols"
-	"fmt"
 	"github.com/antlr4-go/antlr/v4"
 )
 
@@ -51,7 +50,6 @@ func NewParser(sourceCode string) *Parser {
 //	[]string: A list of errors encountered during parsing.
 func (p *Parser) Parse() (*symbols.FunctionDirectory, []string) {
 	parseTree := p.parser.Program()
-	fmt.Println(parseTree.GetText())
 	antlr.ParseTreeWalkerDefault.Walk(p.builder, parseTree)
 
 	return p.builder.Directory, p.builder.Errors

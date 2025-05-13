@@ -1,64 +1,41 @@
-program BabyDuck;
+program BabyDuckProgram2;
 
-var
-    globalCounter, counter, loopIndex: int;
-    totalSum, averageResult, temporaryValue: float;
+var m, n, p : int;
+u, v : float;
 
-void processInputs(floatInput: float, intInput: int) [
-    var
-        sumResult, rowIndex, columnIndex: int;
-        computedFloat: float;
-
+void computeSum(m: int, n: int) [
+    var result : int;
     {
-        rowIndex = 1;
-        columnIndex = 2;
-        sumResult = 0;
-        computedFloat = 3.0;
-        globalCounter = floatInput + 1;
+        result = m + n;
+        print("Sum is", result);
     }
 ];
 
-void processSecondaryInputs(floatInput: float, intInput: int) [
-    var
-        sumResult, rowIndex, columnIndex: int;
-        computedFloat: float;
-
+void greet() [
     {
-        rowIndex = 1;
-        columnIndex = 2;
-        sumResult = 0;
-        computedFloat = 3.0;
-        globalCounter = floatInput + 1;
-        pi : int = 10;
+        print("Hello from greet!");
     }
 ];
 
-main
-{
-    totalSum = 1 + 2;
-    globalCounter = (1 + 2) / 3;
+main {
+    m = 8;
+    n = 15;
+    p = m * (n - 5) + 2;
+    u = 1.23;
+    v = 4.56;
 
-    counter = 1;
-
-    print(totalSum > abc);
-    print(totalSum + 45);
-
-    if (yy > 10) {
-        print("counter is 1");
+    if (p < 100) {
+        print("p is less than 100");
     } else {
-        print("counter is not 1");
+        print("p is greater or equal to 100");
     };
 
-    loopIndex = 2;
-
-    while (zz < 10) do {
-        loopIndex = loopIndex + 1;
-        print(loopIndex);
+    while (n > 0) do {
+        n = n - 3;
+        print(n);
     };
 
-
-    processInputs(1.0, 2.0);
-    processSecondaryInputs(1.0, 1);
+    computeSum(m, n);
+    greet();
 }
-
 end

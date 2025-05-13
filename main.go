@@ -38,7 +38,6 @@ func main() {
 	// Parse the source code
 	newParser := builder.NewParser(string(sourceCode))
 	symbolTable, errors := newParser.Parse()
-	fmt.Println("aaaaa", symbolTable)
 
 	fmt.Println("Function Directory built successfully")
 	printSymbolTable(symbolTable)
