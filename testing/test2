@@ -1,0 +1,34 @@
+program TestSemanticCube;
+var
+    i, j, k: int;
+    x, y, z: float;
+    a, b, c: bool;
+
+main() {
+    i = 5;
+    j = 10;
+    x = 3.14;
+    y = 2.71;
+    a = true;
+    b = false;
+
+    // Operaciones aritméticas válidas
+    k = i + j;  // int + int -> int
+    z = x + y;  // float + float -> float
+    z = i + x;  // int + float -> float
+
+    // Operaciones relacionales
+    c = i > j;  // int > int -> bool
+    c = x <= y; // float <= float -> bool
+    c = i == j; // int == int -> bool
+
+    // Operaciones lógicas
+    c = a && b; // bool && bool -> bool
+    c = a || b; // bool || bool -> bool
+
+    // Operaciones que deberían fallar
+    // Descomentar para probar errores:
+    // k = a + b;  // bool + bool -> error
+    // c = i && j; // int && int -> error
+    // z = a + x;  // bool + float -> error
+}

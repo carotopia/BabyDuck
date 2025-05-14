@@ -7,7 +7,7 @@ void computeSum(m: int, n: int) [
     var result : int;
     {
         result = m + n;
-        print("Sum is", result);
+        print("Sum is", result), eee;
     }
 ];
 
@@ -20,17 +20,18 @@ void greet() [
 main {
     m = 8;
     n = 15;
-    p = m * (n - 5) + 2;
+    p = m * (n - 5) + 2 ;
     u = 1.23;
     v = 4.56;
+    n : int = 0;
 
-    if (p < 100) {
+    if (ooop < 100) {
         print("p is less than 100");
     } else {
         print("p is greater or equal to 100");
     };
 
-    while (n > 0) do {
+    while (ww > 0) do {
         n = n - 3;
         print(n);
     };

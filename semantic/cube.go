@@ -80,3 +80,14 @@ var Cube = SemanticCube{
 		},
 	},
 }
+
+func GetResultType(leftType, operator, rightType string) (string, bool) {
+	if opMap, ok := Cube[operator]; ok {
+		if rightMap, ok := opMap[leftType]; ok {
+			if resultType, ok := rightMap[rightType]; ok {
+				return resultType, true
+			}
+		}
+	}
+	return "", false
+}

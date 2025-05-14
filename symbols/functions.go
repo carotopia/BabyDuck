@@ -8,6 +8,7 @@ import "fmt"
 type FunctionDirectory struct {
 	Directory    map[string]*FunctionInfo
 	CurrentScope []string
+	TempCounter  int
 }
 
 // NewFunctionDirectory creates a new instance of function directory
@@ -67,4 +68,21 @@ func (fd *FunctionDirectory) ValidateFunctionCall(name string, numArgs int) erro
 
 func (fd *FunctionDirectory) Error() {
 
+}
+
+func (fd *FunctionDirectory) NewTempVar(resultType string) Variable {
+	fd.TempCounter++
+
+	tempName := fmt.Sprintf("temp%d", fd.TempCounter)
+	mockAddress := 1000 + fd.TempCounter
+
+	newVar := Variable{
+		Type:          resultType,
+		Value:         nil,
+		MemoryAddress: mockAddress,
+	}
+	currentScope := fd.CurrentScope[len(fd.CurrentScope)-1]
+	fd.Directory[currentScope].Variables[tempName] = newVar
+
+	return newVar
 }

@@ -2,6 +2,7 @@ package builder
 
 import (
 	"BabyDuckCompiler/grammar"
+	"BabyDuckCompiler/quads"
 	"BabyDuckCompiler/symbols"
 	"fmt"
 )
@@ -15,15 +16,24 @@ type DirectoryBuilder struct {
 	Directory *symbols.FunctionDirectory
 	Errors    []string
 	Debug     bool
+
+	OperatorStack *quads.OperatorStack
+	OperandStack  *quads.Stack
+	TypeStack     *quads.Stack
+	QuadQueue     *quads.QuadrupleQueue
 }
 
 // NewDirectoryBuilder creates and initializes a new DirectoryBuilder
 // Returns a pointer to the new directory
 func NewDirectoryBuilder(debug bool) *DirectoryBuilder {
 	return &DirectoryBuilder{
-		Directory: symbols.NewFunctionDirectory(),
-		Errors:    []string{},
-		Debug:     debug,
+		Directory:     symbols.NewFunctionDirectory(),
+		Errors:        []string{},
+		Debug:         debug,
+		OperatorStack: quads.NewOperatorStack(),
+		OperandStack:  quads.NewOperandStack(),
+		TypeStack:     quads.NewStack(),
+		QuadQueue:     quads.NewQuadrupleQueue(),
 	}
 }
 
