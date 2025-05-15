@@ -86,3 +86,10 @@ func (fd *FunctionDirectory) NewTempVar(resultType string) Variable {
 
 	return newVar
 }
+
+func (fd *FunctionDirectory) GetCurrentScope() string {
+	if len(fd.CurrentScope) == 0 {
+		return "global"
+	}
+	return fd.CurrentScope[len(fd.CurrentScope)-1]
+}

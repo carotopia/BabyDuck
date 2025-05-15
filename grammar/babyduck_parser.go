@@ -170,7 +170,7 @@ func babyduckParserInit() {
 }
 
 // BabyDuckParserInit initializes any static state used to implement BabyDuckParser. By default the
-// static state used to implement the grammar is lazily initialized during the first call to
+// static state used to implement the parser is lazily initialized during the first call to
 // NewBabyDuckParser(). You can call this function if you wish to initialize the static state ahead
 // of time.
 func BabyDuckParserInit() {
@@ -178,7 +178,7 @@ func BabyDuckParserInit() {
 	staticData.once.Do(babyduckParserInit)
 }
 
-// NewBabyDuckParser produces a new grammar instance for the optional input antlr.TokenStream.
+// NewBabyDuckParser produces a new parser instance for the optional input antlr.TokenStream.
 func NewBabyDuckParser(input antlr.TokenStream) *BabyDuckParser {
 	BabyDuckParserInit()
 	this := new(BabyDuckParser)
@@ -272,7 +272,7 @@ const (
 type IProgramContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
@@ -532,7 +532,7 @@ errorExit:
 type IVarsContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
@@ -698,7 +698,7 @@ errorExit:
 type IVar_declContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
@@ -859,7 +859,7 @@ errorExit:
 type IId_listContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
@@ -1014,7 +1014,7 @@ errorExit:
 type ITypeContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
@@ -1130,7 +1130,7 @@ errorExit:
 type IBodyContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
@@ -1304,7 +1304,7 @@ errorExit:
 type IStatementContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
@@ -1526,7 +1526,7 @@ errorExit:
 type IAssignContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
@@ -1674,7 +1674,7 @@ errorExit:
 type ICycleContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
@@ -1864,7 +1864,7 @@ errorExit:
 type IConditionContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
@@ -2067,7 +2067,7 @@ errorExit:
 type IElse_partContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
@@ -2201,7 +2201,7 @@ errorExit:
 type IPrint_stmtContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
@@ -2428,7 +2428,7 @@ errorExit:
 type IPrintexprContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
@@ -2571,7 +2571,7 @@ errorExit:
 type IConstantContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
@@ -2687,7 +2687,7 @@ errorExit:
 type IExpressionContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
@@ -2834,7 +2834,7 @@ errorExit:
 type IRelationalContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
@@ -2969,7 +2969,7 @@ errorExit:
 type IRelopContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 	// IsRelopContext differentiates from other interfaces.
 	IsRelopContext()
@@ -3071,8 +3071,14 @@ errorExit:
 type IExpContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
+
+	// GetOp returns the op rule contexts.
+	GetOp() IAddopContext
+
+	// SetOp sets the op rule contexts.
+	SetOp(IAddopContext)
 
 	// Getter signatures
 	AllTerm() []ITermContext
@@ -3087,6 +3093,7 @@ type IExpContext interface {
 type ExpContext struct {
 	antlr.BaseParserRuleContext
 	parser antlr.Parser
+	op     IAddopContext
 }
 
 func NewEmptyExpContext() *ExpContext {
@@ -3115,6 +3122,10 @@ func NewExpContext(parser antlr.Parser, parent antlr.ParserRuleContext, invoking
 }
 
 func (s *ExpContext) GetParser() antlr.Parser { return s.parser }
+
+func (s *ExpContext) GetOp() IAddopContext { return s.op }
+
+func (s *ExpContext) SetOp(v IAddopContext) { s.op = v }
 
 func (s *ExpContext) AllTerm() []ITermContext {
 	children := s.GetChildren()
@@ -3248,7 +3259,10 @@ func (p *BabyDuckParser) Exp() (localctx IExpContext) {
 	for _la == BabyDuckParserT__15 || _la == BabyDuckParserT__16 {
 		{
 			p.SetState(171)
-			p.Addop()
+
+			var _x = p.Addop()
+
+			localctx.(*ExpContext).op = _x
 		}
 		{
 			p.SetState(172)
@@ -3280,7 +3294,7 @@ errorExit:
 type IAddopContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 	// IsAddopContext differentiates from other interfaces.
 	IsAddopContext()
@@ -3382,7 +3396,7 @@ errorExit:
 type ITermContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
@@ -3591,7 +3605,7 @@ errorExit:
 type IMulopContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 	// IsMulopContext differentiates from other interfaces.
 	IsMulopContext()
@@ -3693,7 +3707,7 @@ errorExit:
 type IFactorContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
@@ -3844,7 +3858,7 @@ errorExit:
 type IParexprContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
@@ -3984,7 +3998,7 @@ errorExit:
 type IFactorsignContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
@@ -4131,7 +4145,7 @@ errorExit:
 type IValueContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
@@ -4274,7 +4288,7 @@ errorExit:
 type IFuncsContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
@@ -4388,7 +4402,7 @@ errorExit:
 type IFuncContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
@@ -4587,7 +4601,7 @@ errorExit:
 type IParam_listContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
@@ -4767,7 +4781,7 @@ errorExit:
 type IParamContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
@@ -4907,7 +4921,7 @@ errorExit:
 type IFuncbodyContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
@@ -5093,7 +5107,7 @@ errorExit:
 type IF_callContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures
@@ -5271,7 +5285,7 @@ errorExit:
 type IArg_listContext interface {
 	antlr.ParserRuleContext
 
-	// GetParser returns the grammar.
+	// GetParser returns the parser.
 	GetParser() antlr.Parser
 
 	// Getter signatures

@@ -111,3 +111,16 @@ func (s *OperatorStack) Clear() {
 	s.items = make([]string, 0)
 }
 
+func (s *OperatorStack) Push(operator string) {
+	s.items = append(s.items, operator)
+}
+func (s *OperatorStack) Pop() (string, bool) {
+	if s.IsEmpty() {
+		return "", false
+	}
+	index := len(s.items) - 1
+	operator := s.items[index]
+	s.items = s.items[:index]
+	return operator, true
+}
+

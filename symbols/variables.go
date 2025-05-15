@@ -53,13 +53,10 @@ func (fd *FunctionDirectory) ValidateVariable(scopes []string, name string) erro
 
 // Looks for variable in a specific scope
 // Returns the type and wether it was found or not
-func (fd *FunctionDirectory) FindVariable(scope string, name string) (string, bool) {
-	funcInfo, scopeExists := fd.Directory[scope]
-	if !scopeExists {
-		return "", false
-	}
-
-	variable, varExists := funcInfo.Variables[name]
-	return variable.Type, varExists
+func (fd *FunctionDirectory) FindVariable(scope string, name string) (Variable, bool) {
+	fi, ok := fd.Directory[scope]
+	if !ok { return Variable{}, false }
+	v, exists := fi.Variables[name]
+	return v, exists
 
 }

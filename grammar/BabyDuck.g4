@@ -74,7 +74,7 @@ relational : relop exp;
 relop : '>' | '<'  | '!=' ;
 
 // Arithmetic Expressions
-exp : term (addop term)* ;
+exp : term (op=addop term)* ;
 addop : '+' | '-' ;
 term : factor (mulop factor)* ;
 mulop : '*' | '/' ;

@@ -1,5 +1,8 @@
 program BabyDuckProgram2;
 
+var a, b, c : int;
+a = 5 + 3 * 2;
+
 var m, n, p : int;
 u, v : float;
 
