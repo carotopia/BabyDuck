@@ -68,7 +68,7 @@ func (v *BaseBabyDuckVisitor) VisitExpression(ctx *ExpressionContext) interface{
 	return v.VisitChildren(ctx)
 }
 
-func (v *BaseBabyDuckVisitor) VisitRelational(ctx *RelationalContext) interface{} {
+func (v *BaseBabyDuckVisitor) VisitRel_expr(ctx *Rel_exprContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
@@ -76,7 +76,7 @@ func (v *BaseBabyDuckVisitor) VisitRelop(ctx *RelopContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
-func (v *BaseBabyDuckVisitor) VisitExp(ctx *ExpContext) interface{} {
+func (v *BaseBabyDuckVisitor) VisitAdd_expr(ctx *Add_exprContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 
@@ -93,14 +93,6 @@ func (v *BaseBabyDuckVisitor) VisitMulop(ctx *MulopContext) interface{} {
 }
 
 func (v *BaseBabyDuckVisitor) VisitFactor(ctx *FactorContext) interface{} {
-	return v.VisitChildren(ctx)
-}
-
-func (v *BaseBabyDuckVisitor) VisitParexpr(ctx *ParexprContext) interface{} {
-	return v.VisitChildren(ctx)
-}
-
-func (v *BaseBabyDuckVisitor) VisitFactorsign(ctx *FactorsignContext) interface{} {
 	return v.VisitChildren(ctx)
 }
 

@@ -53,14 +53,14 @@ type BabyDuckListener interface {
 	// EnterExpression is called when entering the expression production.
 	EnterExpression(c *ExpressionContext)
 
-	// EnterRelational is called when entering the relational production.
-	EnterRelational(c *RelationalContext)
+	// EnterRel_expr is called when entering the rel_expr production.
+	EnterRel_expr(c *Rel_exprContext)
 
 	// EnterRelop is called when entering the relop production.
 	EnterRelop(c *RelopContext)
 
-	// EnterExp is called when entering the exp production.
-	EnterExp(c *ExpContext)
+	// EnterAdd_expr is called when entering the add_expr production.
+	EnterAdd_expr(c *Add_exprContext)
 
 	// EnterAddop is called when entering the addop production.
 	EnterAddop(c *AddopContext)
@@ -73,12 +73,6 @@ type BabyDuckListener interface {
 
 	// EnterFactor is called when entering the factor production.
 	EnterFactor(c *FactorContext)
-
-	// EnterParexpr is called when entering the parexpr production.
-	EnterParexpr(c *ParexprContext)
-
-	// EnterFactorsign is called when entering the factorsign production.
-	EnterFactorsign(c *FactorsignContext)
 
 	// EnterValue is called when entering the value production.
 	EnterValue(c *ValueContext)
@@ -149,14 +143,14 @@ type BabyDuckListener interface {
 	// ExitExpression is called when exiting the expression production.
 	ExitExpression(c *ExpressionContext)
 
-	// ExitRelational is called when exiting the relational production.
-	ExitRelational(c *RelationalContext)
+	// ExitRel_expr is called when exiting the rel_expr production.
+	ExitRel_expr(c *Rel_exprContext)
 
 	// ExitRelop is called when exiting the relop production.
 	ExitRelop(c *RelopContext)
 
-	// ExitExp is called when exiting the exp production.
-	ExitExp(c *ExpContext)
+	// ExitAdd_expr is called when exiting the add_expr production.
+	ExitAdd_expr(c *Add_exprContext)
 
 	// ExitAddop is called when exiting the addop production.
 	ExitAddop(c *AddopContext)
@@ -169,12 +163,6 @@ type BabyDuckListener interface {
 
 	// ExitFactor is called when exiting the factor production.
 	ExitFactor(c *FactorContext)
-
-	// ExitParexpr is called when exiting the parexpr production.
-	ExitParexpr(c *ParexprContext)
-
-	// ExitFactorsign is called when exiting the factorsign production.
-	ExitFactorsign(c *FactorsignContext)
 
 	// ExitValue is called when exiting the value production.
 	ExitValue(c *ValueContext)

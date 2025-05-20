@@ -1,0 +1,15 @@
+program tescdt;
+var a, b,c : int;
+
+main {
+  a = 3 + 4;
+  b = a * 2;
+  c = 3 - 4;
+  if (a > b) {
+    print("a es mayor");
+  } else {
+    print("b es mayor");
+  };
+}
+end
+

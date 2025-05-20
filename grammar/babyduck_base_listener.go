@@ -111,11 +111,11 @@ func (s *BaseBabyDuckListener) EnterExpression(ctx *ExpressionContext) {}
 // ExitExpression is called when production expression is exited.
 func (s *BaseBabyDuckListener) ExitExpression(ctx *ExpressionContext) {}
 
-// EnterRelational is called when production relational is entered.
-func (s *BaseBabyDuckListener) EnterRelational(ctx *RelationalContext) {}
+// EnterRel_expr is called when production rel_expr is entered.
+func (s *BaseBabyDuckListener) EnterRel_expr(ctx *Rel_exprContext) {}
 
-// ExitRelational is called when production relational is exited.
-func (s *BaseBabyDuckListener) ExitRelational(ctx *RelationalContext) {}
+// ExitRel_expr is called when production rel_expr is exited.
+func (s *BaseBabyDuckListener) ExitRel_expr(ctx *Rel_exprContext) {}
 
 // EnterRelop is called when production relop is entered.
 func (s *BaseBabyDuckListener) EnterRelop(ctx *RelopContext) {}
@@ -123,11 +123,11 @@ func (s *BaseBabyDuckListener) EnterRelop(ctx *RelopContext) {}
 // ExitRelop is called when production relop is exited.
 func (s *BaseBabyDuckListener) ExitRelop(ctx *RelopContext) {}
 
-// EnterExp is called when production exp is entered.
-func (s *BaseBabyDuckListener) EnterExp(ctx *ExpContext) {}
+// EnterAdd_expr is called when production add_expr is entered.
+func (s *BaseBabyDuckListener) EnterAdd_expr(ctx *Add_exprContext) {}
 
-// ExitExp is called when production exp is exited.
-func (s *BaseBabyDuckListener) ExitExp(ctx *ExpContext) {}
+// ExitAdd_expr is called when production add_expr is exited.
+func (s *BaseBabyDuckListener) ExitAdd_expr(ctx *Add_exprContext) {}
 
 // EnterAddop is called when production addop is entered.
 func (s *BaseBabyDuckListener) EnterAddop(ctx *AddopContext) {}
@@ -152,18 +152,6 @@ func (s *BaseBabyDuckListener) EnterFactor(ctx *FactorContext) {}
 
 // ExitFactor is called when production factor is exited.
 func (s *BaseBabyDuckListener) ExitFactor(ctx *FactorContext) {}
-
-// EnterParexpr is called when production parexpr is entered.
-func (s *BaseBabyDuckListener) EnterParexpr(ctx *ParexprContext) {}
-
-// ExitParexpr is called when production parexpr is exited.
-func (s *BaseBabyDuckListener) ExitParexpr(ctx *ParexprContext) {}
-
-// EnterFactorsign is called when production factorsign is entered.
-func (s *BaseBabyDuckListener) EnterFactorsign(ctx *FactorsignContext) {}
-
-// ExitFactorsign is called when production factorsign is exited.
-func (s *BaseBabyDuckListener) ExitFactorsign(ctx *FactorsignContext) {}
 
 // EnterValue is called when production value is entered.
 func (s *BaseBabyDuckListener) EnterValue(ctx *ValueContext) {}

@@ -53,14 +53,14 @@ type BabyDuckVisitor interface {
 	// Visit a parse tree produced by BabyDuckParser#expression.
 	VisitExpression(ctx *ExpressionContext) interface{}
 
-	// Visit a parse tree produced by BabyDuckParser#relational.
-	VisitRelational(ctx *RelationalContext) interface{}
+	// Visit a parse tree produced by BabyDuckParser#rel_expr.
+	VisitRel_expr(ctx *Rel_exprContext) interface{}
 
 	// Visit a parse tree produced by BabyDuckParser#relop.
 	VisitRelop(ctx *RelopContext) interface{}
 
-	// Visit a parse tree produced by BabyDuckParser#exp.
-	VisitExp(ctx *ExpContext) interface{}
+	// Visit a parse tree produced by BabyDuckParser#add_expr.
+	VisitAdd_expr(ctx *Add_exprContext) interface{}
 
 	// Visit a parse tree produced by BabyDuckParser#addop.
 	VisitAddop(ctx *AddopContext) interface{}
@@ -73,12 +73,6 @@ type BabyDuckVisitor interface {
 
 	// Visit a parse tree produced by BabyDuckParser#factor.
 	VisitFactor(ctx *FactorContext) interface{}
-
-	// Visit a parse tree produced by BabyDuckParser#parexpr.
-	VisitParexpr(ctx *ParexprContext) interface{}
-
-	// Visit a parse tree produced by BabyDuckParser#factorsign.
-	VisitFactorsign(ctx *FactorsignContext) interface{}
 
 	// Visit a parse tree produced by BabyDuckParser#value.
 	VisitValue(ctx *ValueContext) interface{}

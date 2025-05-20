@@ -16,13 +16,15 @@ type Quadruple struct {
 
 // QuadrupleQueue implementa una fila para almacenar cuádruplos
 type QuadrupleQueue struct {
-	Items []Quadruple
+	Items      []Quadruple
+	TemCounter int
 }
 
 // NewQuadrupleQueue crea una nueva fila de cuádruplos vacía
 func NewQuadrupleQueue() *QuadrupleQueue {
 	return &QuadrupleQueue{
-		Items: make([]Quadruple, 0),
+		Items:      make([]Quadruple, 0),
+		TemCounter: 0,
 	}
 }
 
@@ -90,4 +92,14 @@ func (q *QuadrupleQueue) String() string {
 			i, quad.Operator, quad.LeftOperand, quad.RightOperand, quad.Result))
 	}
 	return output.String()
+}
+func (q *QuadrupleQueue) NewTemp(resultType string) string {
+	q.TemCounter++
+	return fmt.Sprintf("t%d", q.TemCounter)
+}
+
+func (q *QuadrupleQueue) FillJump(index int, target int) {
+	if index >= 0 && index < len(q.Items) {
+		q.Items[index].Result = target
+	}
 }

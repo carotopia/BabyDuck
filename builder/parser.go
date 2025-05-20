@@ -54,3 +54,10 @@ func (p *Parser) Parse() (*symbols.FunctionDirectory, []string) {
 
 	return p.builder.Directory, p.builder.Errors
 }
+
+func (p *Parser) GetDirectoryBuilder() (*DirectoryBuilder, bool) {
+	if p.builder == nil {
+		return nil, false
+	}
+	return p.builder, true
+}

@@ -1,6 +1,6 @@
 grammar BabyDuck;
-// Lexer Rules
 
+// -------- Lexer Rules --------
 VOID : 'void' ;
 INTTYPE : 'int' ;
 FLOATTYPE : 'float' ;
@@ -13,91 +13,161 @@ COLON : ':' ;
 COMMA : ',' ;
 SEMICOLON : ';' ;
 
-
-
 ID : [a-zA-Z_][a-zA-Z_0-9]* ;
 INT : [0-9]+ ;
 FLOAT : [0-9]+ '.' [0-9]+ ;
-STRING : '"' ~('"')* '"';
-
-
+STRING : '"' ~('"')* '"' ;
 
 WS : [ \t\r\n]+ -> skip ;
 
-// Parser Rules
+// -------- Parser Rules --------
 
-// Main Program
-program: 'program' ID SEMICOLON (vars)? (funcs)* 'main' body 'end'  ;
+// Programa principal
+program
+    : 'program' ID SEMICOLON (vars)? (funcs)* 'main' body 'end'
+    ;
 
+// Declaración de variables
+vars
+    : 'var' var_decl+
+    ;
 
+var_decl
+    : id_list COLON type SEMICOLON
+    ;
 
+id_list
+    : ID (COMMA ID)*
+    ;
 
-// Variable Declaration
-vars : 'var' var_decl+ ;
-var_decl : id_list COLON type SEMICOLON ;
-id_list : ID (',' ID)* ;
-type : INTTYPE | FLOATTYPE ;
+type
+    : INTTYPE
+    | FLOATTYPE
+    ;
 
-// Body
-body : '{' statement* '}' ;
+// Bloque de código
+body
+    : '{' statement* '}'
+    ;
 
-// Statement
-statement : assign
-          | cycle
-          | f_call
-          | print_stmt
-          | condition ;
+// Sentencias
+statement
+    : assign
+    | cycle
+    | f_call
+    | print_stmt
+    | condition
+    ;
 
-//  Assign
-assign : ID '=' expression SEMICOLON ;
+// Asignación
+assign
+    : ID '=' expression SEMICOLON
+    ;
 
 // While
-cycle : 'while' '('expression ')' 'do' body SEMICOLON ;
+cycle
+    : 'while' LPAREN expression RPAREN 'do' body SEMICOLON
+    ;
 
-// Conditional
-condition : 'if' '(' expression ')' body else_part SEMICOLON ;
-else_part : ('else' body)? ;
+// Condicional
+condition
+    : 'if' LPAREN expression RPAREN body else_part SEMICOLON
+    ;
+
+else_part
+    : ('else' body)?
+    ;
 
 // Print
-print_stmt : 'print' '(' printexpr (COMMA printexpr)* ')' SEMICOLON ;
-printexpr : exp
-          | STRING ;
+print_stmt
+    : 'print' LPAREN printexpr (COMMA printexpr)* RPAREN SEMICOLON
+    ;
 
-// Constant
-constant : INT
-        | FLOAT ;
+printexpr
+    : expression
+    | STRING
+    ;
 
+// Constantes
+constant
+    : INT
+    | FLOAT
+    ;
 
-//Expressions
-expression : exp (relational)? ;
-relational : relop exp;
-relop : '>' | '<'  | '!=' ;
+// -------- Expresiones con precedencia --------
 
-// Arithmetic Expressions
-exp : term (op=addop term)* ;
-addop : '+' | '-' ;
-term : factor (mulop factor)* ;
-mulop : '*' | '/' ;
+// Entrada principal
+expression
+    : rel_expr
+    ;
 
-// Factor
-factor : parexpr | factorsign;
-parexpr : LPAREN expression RPAREN ;
-factorsign : (addop)? value;
-value: ID | constant;
+// Relacionales
+rel_expr
+    : add_expr (relop add_expr)?
+    ;
 
+relop
+    : '>'
+    | '<'
+    | '!='
+    ;
 
+// Suma / Resta
+add_expr
+    : term (addop term)*
+    ;
 
+addop
+    : '+'
+    | '-'
+    ;
 
-// Functions
-funcs : func;
-func : 'void' ID LPAREN param_list? RPAREN funcbody ;
-param_list : param (COMMA param)* ;
-param : ID COLON type  ;
-funcbody : LBRACKET vars? body RBRACKET SEMICOLON ;
+// Multiplicación / División
+term
+    : factor (mulop factor)*
+    ;
 
+mulop
+    : '*'
+    | '/'
+    ;
 
-f_call : ID LPAREN arg_list? RPAREN SEMICOLON ;
-arg_list : expression (COMMA expression)* ;
+// Factor (con soporte para paréntesis y signos)
+factor
+    : LPAREN expression RPAREN
+    | (addop)? value
+    ;
 
+value
+    : ID
+    | constant
+    ;
 
+// -------- Funciones --------
+funcs
+    : func
+    ;
 
+func
+    : VOID ID LPAREN param_list? RPAREN funcbody
+    ;
+
+param_list
+    : param (COMMA param)*
+    ;
+
+param
+    : ID COLON type
+    ;
+
+funcbody
+    : LBRACKET vars? body RBRACKET SEMICOLON
+    ;
+
+f_call
+    : ID LPAREN arg_list? RPAREN SEMICOLON
+    ;
+
+arg_list
+    : expression (COMMA expression)*
+    ;

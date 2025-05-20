@@ -1,34 +1,64 @@
-program TestSemanticCube;
+program BabyDuck;
+
 var
-    i, j, k: int;
-    x, y, z: float;
-    a, b, c: bool;
+    globalCounter, counter, loopIndex: int;
+    totalSum, averageResult, temporaryValue: float;
 
-main() {
-    i = 5;
-    j = 10;
-    x = 3.14;
-    y = 2.71;
-    a = true;
-    b = false;
+void processInputs(floatInput: float, intInput: int) [
+    var
+        sumResult, rowIndex, columnIndex: int;
+        computedFloat: float;
 
-    // Operaciones aritméticas válidas
-    k = i + j;  // int + int -> int
-    z = x + y;  // float + float -> float
-    z = i + x;  // int + float -> float
+    {
+        rowIndex = 1;
+        columnIndex = 2;
+        sumResult = 0;
+        computedFloat = 3.0;
+        globalCounter = floatInput + 1;
+    }
+];
 
-    // Operaciones relacionales
-    c = i > j;  // int > int -> bool
-    c = x <= y; // float <= float -> bool
-    c = i == j; // int == int -> bool
+void processSecondaryInputs(floatInput: float, intInput: int) [
+    var
+        sumResult, rowIndex, columnIndex: int;
+        computedFloat: float;
 
-    // Operaciones lógicas
-    c = a && b; // bool && bool -> bool
-    c = a || b; // bool || bool -> bool
+    {
+        rowIndex = 1;
+        columnIndex = 2;
+        sumResult = 0;
+        computedFloat = 3.0;
+        globalCounter = floatInput + 1;
+        pi = 10;
+    }
+];
 
-    // Operaciones que deberían fallar
-    // Descomentar para probar errores:
-    // k = a + b;  // bool + bool -> error
-    // c = i && j; // int && int -> error
-    // z = a + x;  // bool + float -> error
+main
+{
+    totalSum = 1 + 2;
+    globalCounter = (1 + 2) / 3;
+
+    counter = 1;
+
+    print(totalSum > abc);
+    print(totalSum + 45);
+
+    if (yy > 10) {
+        print("counter is 1");
+    } else {
+        print("counter is not 1");
+    };
+
+    loopIndex = 2;
+
+    while (zz < 10) do {
+        loopIndex = loopIndex + 1;
+        print(loopIndex);
+    };
+
+
+    processInputs(1.0, loopIndex);
+    processSecondaryInputs(1.0, 1);
 }
+
+end

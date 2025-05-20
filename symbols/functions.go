@@ -9,6 +9,8 @@ type FunctionDirectory struct {
 	Directory    map[string]*FunctionInfo
 	CurrentScope []string
 	TempCounter  int
+	IntAddress int
+	FloatAddress int
 }
 
 // NewFunctionDirectory creates a new instance of function directory
@@ -19,6 +21,8 @@ func NewFunctionDirectory() *FunctionDirectory {
 	directory := &FunctionDirectory{
 		Directory:    make(map[string]*FunctionInfo),
 		CurrentScope: []string{"program"},
+		IntAddress: 1000,
+		FloatAddress: 1000,
 	}
 
 	directory.Directory["program"] = &FunctionInfo{

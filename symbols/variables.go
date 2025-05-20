@@ -25,12 +25,27 @@ func (fd *FunctionDirectory) AddVariable(name string, varType string) error {
 	if !exists {
 		return fmt.Errorf("error: function '%s' is not declared", context)
 	}
-	mockAddress := 1000 + len(varType)
+
+	if _, exists := funcInfo.Variables[name]; exists {
+		return fmt.Errorf("error: variable '%s' already declared in scope '%s'", name, context)
+	}
+
+	var address int
+	switch varType {
+	case "int":
+		fd.IntAddress++
+		address = fd.IntAddress
+	case "float":
+		fd.FloatAddress++
+		address = fd.FloatAddress
+	default:
+		return fmt.Errorf("error: tipo de variable '%s' no soportado", varType)
+	}
 
 	funcInfo.Variables[name] = Variable{
 		Type:          varType,
 		Value:         nil,
-		MemoryAddress: mockAddress,
+		MemoryAddress: address,
 	}
 
 	return nil
@@ -39,24 +54,38 @@ func (fd *FunctionDirectory) AddVariable(name string, varType string) error {
 // Validates if the variable exists within the current scope
 // LookUpVariable is called in every scope from inside to outside
 // If FindVariable founds the variable returns nil, return error
-func (fd *FunctionDirectory) ValidateVariable(scopes []string, name string) error {
-	for i := len(scopes) - 1; i >= 0; i-- {
-		scope := scopes[i]
-		_, exists := fd.FindVariable(scope, name)
-		if exists {
-			return nil
-		}
+func (fd *FunctionDirectory) ValidateVariable(name string) error {
+	_, exists := fd.FindVariableDeep(name)
+	if exists {
+		return nil
 	}
-
 	return fmt.Errorf("error: undefined variable '%s'", name)
 }
 
 // Looks for variable in a specific scope
 // Returns the type and wether it was found or not
 func (fd *FunctionDirectory) FindVariable(scope string, name string) (Variable, bool) {
-	fi, ok := fd.Directory[scope]
-	if !ok { return Variable{}, false }
-	v, exists := fi.Variables[name]
+	funcInfo, ok := fd.Directory[scope]
+	if !ok {
+		return Variable{}, false
+	}
+	v, exists := funcInfo.Variables[name]
 	return v, exists
+}
 
+// Busca una variable desde el scope actual hacia los scopes padres y luego en el global
+func (fd *FunctionDirectory) FindVariableDeep(name string) (Variable, bool) {
+	// Busca en los scopes actuales (desde el más interno hacia el global)
+	for i := len(fd.CurrentScope) - 1; i >= 0; i-- {
+		scope := fd.CurrentScope[i]
+		v, exists := fd.FindVariable(scope, name)
+		if exists {
+			return v, true
+		}
+	}
+
+
+	// Busca al final en el scope global (por si no está en ninguno anterior)
+	v, exists := fd.FindVariable("program", name)
+	return v, exists
 }
