@@ -2,6 +2,7 @@ package builder
 
 import (
 	"BabyDuckCompiler/grammar"
+	"BabyDuckCompiler/memory"
 	"BabyDuckCompiler/symbols"
 	"github.com/antlr4-go/antlr/v4"
 )
@@ -32,12 +33,19 @@ func NewParser(sourceCode string) *Parser {
 	tokenStream := antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel)
 	parser_b := grammar.NewBabyDuckParser(tokenStream)
 
+	memManager := memory.NewMemoryManager(memory.DefaultMemoryConfig) // Usaste memManager
+
+	funcDir := symbols.NewFunctionDirectory(memManager)
+	constTable := symbols.NewConstantTable(memManager) // <-- ahora sí, usa memManager
+
+	dirBuilder := NewDirectoryBuilder(false, funcDir, constTable) // <-- usa los 3 argumentos
+
 	return &Parser{
 		inputStream: inputStream,
 		lexer:       lexer,
 		tokenStream: tokenStream,
 		parser:      parser_b,
-		builder:     NewDirectoryBuilder(false),
+		builder:     dirBuilder,
 	}
 }
 

@@ -31,15 +31,30 @@ func (fd *FunctionDirectory) AddVariable(name string, varType string) error {
 	}
 
 	var address int
-	switch varType {
-	case "int":
-		fd.IntAddress++
-		address = fd.IntAddress
-	case "float":
-		fd.FloatAddress++
-		address = fd.FloatAddress
-	default:
-		return fmt.Errorf("error: tipo de variable '%s' no soportado", varType)
+	if context == "program" {
+		// Global
+		switch varType {
+		case "int":
+			address = fd.Memory.NextGlobalInt()
+		case "float":
+			address = fd.Memory.NextGlobalFloat()
+		case "bool":
+			address = fd.Memory.NextGlobalBool()
+		default:
+			return fmt.Errorf("error: tipo de variable '%s' no soportado", varType)
+		}
+	} else {
+		// Local
+		switch varType {
+		case "int":
+			address = fd.Memory.NextLocalInt()
+		case "float":
+			address = fd.Memory.NextLocalFloat()
+		case "bool":
+			address = fd.Memory.NextLocalBool()
+		default:
+			return fmt.Errorf("error: tipo de variable '%s' no soportado", varType)
+		}
 	}
 
 	funcInfo.Variables[name] = Variable{
@@ -50,10 +65,6 @@ func (fd *FunctionDirectory) AddVariable(name string, varType string) error {
 
 	return nil
 }
-
-// Validates if the variable exists within the current scope
-// LookUpVariable is called in every scope from inside to outside
-// If FindVariable founds the variable returns nil, return error
 func (fd *FunctionDirectory) ValidateVariable(name string) error {
 	_, exists := fd.FindVariableDeep(name)
 	if exists {
@@ -61,6 +72,7 @@ func (fd *FunctionDirectory) ValidateVariable(name string) error {
 	}
 	return fmt.Errorf("error: undefined variable '%s'", name)
 }
+
 
 // Looks for variable in a specific scope
 // Returns the type and wether it was found or not
@@ -83,7 +95,6 @@ func (fd *FunctionDirectory) FindVariableDeep(name string) (Variable, bool) {
 			return v, true
 		}
 	}
-
 
 	// Busca al final en el scope global (por si no está en ninguno anterior)
 	v, exists := fd.FindVariable("program", name)

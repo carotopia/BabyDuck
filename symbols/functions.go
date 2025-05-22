@@ -1,6 +1,9 @@
 package symbols
 
-import "fmt"
+import (
+	"BabyDuckCompiler/memory"
+	"fmt"
+)
 
 // FunctionDirectory structure with two key components
 // Directory is a dictionary where every entrey represents a function or a scope
@@ -9,20 +12,18 @@ type FunctionDirectory struct {
 	Directory    map[string]*FunctionInfo
 	CurrentScope []string
 	TempCounter  int
-	IntAddress int
-	FloatAddress int
+	Memory       *memory.MemoryManager
 }
 
 // NewFunctionDirectory creates a new instance of function directory
 // initializes Directory as an empty map of functions
 // sets current scope to program the root of the global
 
-func NewFunctionDirectory() *FunctionDirectory {
+func NewFunctionDirectory(mem *memory.MemoryManager) *FunctionDirectory {
 	directory := &FunctionDirectory{
 		Directory:    make(map[string]*FunctionInfo),
 		CurrentScope: []string{"program"},
-		IntAddress: 1000,
-		FloatAddress: 1000,
+		Memory:       mem,
 	}
 
 	directory.Directory["program"] = &FunctionInfo{
@@ -77,13 +78,23 @@ func (fd *FunctionDirectory) Error() {
 func (fd *FunctionDirectory) NewTempVar(resultType string) Variable {
 	fd.TempCounter++
 
-	tempName := fmt.Sprintf("temp%d", fd.TempCounter)
-	mockAddress := 1000 + fd.TempCounter
+	var address int
+	switch resultType {
+	case "int":
+		address = fd.Memory.NextTempInt()
+	case "float":
+		address = fd.Memory.NextTempFloat()
+	case "bool":
+		address = fd.Memory.NextTempBool()
+	default:
+		address = fd.Memory.NextTempInt()
+	}
 
+	tempName := fmt.Sprintf("temp%d", fd.TempCounter)
 	newVar := Variable{
 		Type:          resultType,
 		Value:         nil,
-		MemoryAddress: mockAddress,
+		MemoryAddress: address,
 	}
 	currentScope := fd.CurrentScope[len(fd.CurrentScope)-1]
 	fd.Directory[currentScope].Variables[tempName] = newVar

@@ -24,14 +24,15 @@ type DirectoryBuilder struct {
 	TypeStack     *quads.TypeStack
 	QuadQueue     *quads.QuadrupleQueue
 	PendingJumps  []int
+	ConstantTable *symbols.ConstantTable
 }
 
 // NewDirectoryBuilder creates and initializes a new DirectoryBuilder
 // Returns a pointer to the new directory
-func NewDirectoryBuilder(debug bool) *DirectoryBuilder {
+func NewDirectoryBuilder(debug bool, funcDir *symbols.FunctionDirectory, constTable *symbols.ConstantTable) *DirectoryBuilder {
 	return &DirectoryBuilder{
 		BaseBabyDuckListener: &grammar.BaseBabyDuckListener{}, // ✅ aquí inicializas el campo embebido como puntero
-		Directory:            symbols.NewFunctionDirectory(),
+		Directory:            funcDir,
 		Errors:               []string{},
 		Debug:                debug,
 		OperatorStack:        quads.NewOperatorStack(),
@@ -39,6 +40,7 @@ func NewDirectoryBuilder(debug bool) *DirectoryBuilder {
 		TypeStack:            quads.NewTypeStack(),
 		QuadQueue:            quads.NewQuadrupleQueue(),
 		PendingJumps:         []int{},
+		ConstantTable:        constTable,
 	}
 }
 
@@ -447,9 +449,10 @@ func (d *DirectoryBuilder) ExitValue(ctx *grammar.ValueContext) {
 	} else if ctx.Constant() != nil {
 		val := ctx.Constant().GetText()
 		typ := semantic.InferTypeFromConstant(val)
+		address := d.ConstantTable.AddConstant(val, typ)
 
 		// Aquí puedes manejar los constantes como literales directos
-		d.OperandStack.Push(val)
+		d.OperandStack.Push(address)
 		d.TypeStack.Push(typ)
 	}
 }
@@ -471,6 +474,9 @@ func (d *DirectoryBuilder) ExitProgram(ctx *grammar.ProgramContext) {
 	fmt.Println("=== Cuádruplos generados ===")
 	for i, quad := range d.QuadQueue.Items {
 		fmt.Printf("%d: (%s, %v, %v, %v)\n", i, quad.Operator, quad.LeftOperand, quad.RightOperand, quad.Result)
+	}
+	if d.ConstantTable != nil {
+		d.ConstantTable.Print()
 	}
 }
 
