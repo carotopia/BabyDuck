@@ -1,35 +1,64 @@
 grammar BabyDuck;
 
 // -------- Lexer Rules --------
+// Palabras clave
+PROGRAM : 'program' ;
+MAIN : 'main' ;
+END : 'end' ;
+VAR : 'var' ;
 VOID : 'void' ;
 INTTYPE : 'int' ;
 FLOATTYPE : 'float' ;
+WHILE : 'while' ;
+DO : 'do' ;
+IF : 'if' ;
+ELSE : 'else' ;
+PRINT : 'print' ;
 
+// Operadores de comparación
+GT : '>' ;
+LT : '<' ;
+NE : '!=' ;
+
+// Operadores aritméticos
+PLUS : '+' ;
+MINUS : '-' ;
+MULT : '*' ;
+DIV : '/' ;
+
+// Operador de asignación
+ASSIGN : '=' ;
+
+// Símbolos de puntuación
 LPAREN : '(' ;
 RPAREN : ')' ;
 LBRACKET : '[' ;
 RBRACKET : ']' ;
+LBRACE : '{' ;
+RBRACE : '}' ;
 COLON : ':' ;
 COMMA : ',' ;
 SEMICOLON : ';' ;
 
+// Identificadores y literales
 ID : [a-zA-Z_][a-zA-Z_0-9]* ;
 INT : [0-9]+ ;
 FLOAT : [0-9]+ '.' [0-9]+ ;
 STRING : '"' ~('"')* '"' ;
 
+// Espacios en blanco
 WS : [ \t\r\n]+ -> skip ;
 
 // -------- Parser Rules --------
 
 // Programa principal
 program
-    : 'program' ID SEMICOLON (vars)? (funcs)* 'main' body 'end'
+    : PROGRAM ID SEMICOLON (vars)? (funcs)* MAIN body END
     ;
 
 // Declaración de variables
 vars
-    : 'var' var_decl+
+    : VAR var_decl+
     ;
 
 var_decl
@@ -47,7 +76,7 @@ type
 
 // Bloque de código
 body
-    : '{' statement* '}'
+    : LBRACE statement* RBRACE
     ;
 
 // Sentencias
@@ -61,26 +90,26 @@ statement
 
 // Asignación
 assign
-    : ID '=' expression SEMICOLON
+    : ID ASSIGN expression SEMICOLON
     ;
 
 // While
 cycle
-    : 'while' LPAREN expression RPAREN 'do' body SEMICOLON
+    : WHILE LPAREN expression RPAREN DO body SEMICOLON
     ;
 
 // Condicional
 condition
-    : 'if' LPAREN expression RPAREN body else_part SEMICOLON
+    : IF LPAREN expression RPAREN body else_part SEMICOLON
     ;
 
 else_part
-    : ('else' body)?
+    : (ELSE body)?
     ;
 
 // Print
 print_stmt
-    : 'print' LPAREN printexpr (COMMA printexpr)* RPAREN SEMICOLON
+    : PRINT LPAREN printexpr (COMMA printexpr)* RPAREN SEMICOLON
     ;
 
 printexpr
@@ -107,9 +136,9 @@ rel_expr
     ;
 
 relop
-    : '>'
-    | '<'
-    | '!='
+    : GT
+    | LT
+    | NE
     ;
 
 // Suma / Resta
@@ -118,8 +147,8 @@ add_expr
     ;
 
 addop
-    : '+'
-    | '-'
+    : PLUS
+    | MINUS
     ;
 
 // Multiplicación / División
@@ -128,8 +157,8 @@ term
     ;
 
 mulop
-    : '*'
-    | '/'
+    : MULT
+    | DIV
     ;
 
 // Factor (con soporte para paréntesis y signos)

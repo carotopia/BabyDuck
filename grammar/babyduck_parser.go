@@ -33,16 +33,17 @@ var BabyDuckParserStaticData struct {
 func babyduckParserInit() {
 	staticData := &BabyDuckParserStaticData
 	staticData.LiteralNames = []string{
-		"", "'program'", "'main'", "'end'", "'var'", "'{'", "'}'", "'='", "'while'",
-		"'do'", "'if'", "'else'", "'print'", "'>'", "'<'", "'!='", "'+'", "'-'",
-		"'*'", "'/'", "'void'", "'int'", "'float'", "'('", "')'", "'['", "']'",
-		"':'", "','", "';'",
+		"", "'program'", "'main'", "'end'", "'var'", "'void'", "'int'", "'float'",
+		"'while'", "'do'", "'if'", "'else'", "'print'", "'>'", "'<'", "'!='",
+		"'+'", "'-'", "'*'", "'/'", "'='", "'('", "')'", "'['", "']'", "'{'",
+		"'}'", "':'", "','", "';'",
 	}
 	staticData.SymbolicNames = []string{
-		"", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
-		"", "", "", "VOID", "INTTYPE", "FLOATTYPE", "LPAREN", "RPAREN", "LBRACKET",
-		"RBRACKET", "COLON", "COMMA", "SEMICOLON", "ID", "INT", "FLOAT", "STRING",
-		"WS",
+		"", "PROGRAM", "MAIN", "END", "VAR", "VOID", "INTTYPE", "FLOATTYPE",
+		"WHILE", "DO", "IF", "ELSE", "PRINT", "GT", "LT", "NE", "PLUS", "MINUS",
+		"MULT", "DIV", "ASSIGN", "LPAREN", "RPAREN", "LBRACKET", "RBRACKET",
+		"LBRACE", "RBRACE", "COLON", "COMMA", "SEMICOLON", "ID", "INT", "FLOAT",
+		"STRING", "WS",
 	}
 	staticData.RuleNames = []string{
 		"program", "vars", "var_decl", "id_list", "type", "body", "statement",
@@ -80,12 +81,12 @@ func babyduckParserInit() {
 		28, 1, 28, 1, 28, 1, 29, 1, 29, 1, 29, 5, 29, 246, 8, 29, 10, 29, 12, 29,
 		249, 9, 29, 1, 29, 0, 0, 30, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22,
 		24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58,
-		0, 5, 1, 0, 21, 22, 1, 0, 31, 32, 1, 0, 13, 15, 1, 0, 16, 17, 1, 0, 18,
-		19, 243, 0, 60, 1, 0, 0, 0, 2, 76, 1, 0, 0, 0, 4, 82, 1, 0, 0, 0, 6, 87,
-		1, 0, 0, 0, 8, 95, 1, 0, 0, 0, 10, 97, 1, 0, 0, 0, 12, 111, 1, 0, 0, 0,
-		14, 113, 1, 0, 0, 0, 16, 118, 1, 0, 0, 0, 18, 126, 1, 0, 0, 0, 20, 136,
-		1, 0, 0, 0, 22, 138, 1, 0, 0, 0, 24, 153, 1, 0, 0, 0, 26, 155, 1, 0, 0,
-		0, 28, 157, 1, 0, 0, 0, 30, 159, 1, 0, 0, 0, 32, 165, 1, 0, 0, 0, 34, 167,
+		0, 5, 1, 0, 6, 7, 1, 0, 31, 32, 1, 0, 13, 15, 1, 0, 16, 17, 1, 0, 18, 19,
+		243, 0, 60, 1, 0, 0, 0, 2, 76, 1, 0, 0, 0, 4, 82, 1, 0, 0, 0, 6, 87, 1,
+		0, 0, 0, 8, 95, 1, 0, 0, 0, 10, 97, 1, 0, 0, 0, 12, 111, 1, 0, 0, 0, 14,
+		113, 1, 0, 0, 0, 16, 118, 1, 0, 0, 0, 18, 126, 1, 0, 0, 0, 20, 136, 1,
+		0, 0, 0, 22, 138, 1, 0, 0, 0, 24, 153, 1, 0, 0, 0, 26, 155, 1, 0, 0, 0,
+		28, 157, 1, 0, 0, 0, 30, 159, 1, 0, 0, 0, 32, 165, 1, 0, 0, 0, 34, 167,
 		1, 0, 0, 0, 36, 176, 1, 0, 0, 0, 38, 178, 1, 0, 0, 0, 40, 187, 1, 0, 0,
 		0, 42, 197, 1, 0, 0, 0, 44, 201, 1, 0, 0, 0, 46, 203, 1, 0, 0, 0, 48, 205,
 		1, 0, 0, 0, 50, 214, 1, 0, 0, 0, 52, 222, 1, 0, 0, 0, 54, 226, 1, 0, 0,
@@ -101,25 +102,25 @@ func babyduckParserInit() {
 		92, 5, 30, 0, 0, 88, 89, 5, 28, 0, 0, 89, 91, 5, 30, 0, 0, 90, 88, 1, 0,
 		0, 0, 91, 94, 1, 0, 0, 0, 92, 90, 1, 0, 0, 0, 92, 93, 1, 0, 0, 0, 93, 7,
 		1, 0, 0, 0, 94, 92, 1, 0, 0, 0, 95, 96, 7, 0, 0, 0, 96, 9, 1, 0, 0, 0,
-		97, 101, 5, 5, 0, 0, 98, 100, 3, 12, 6, 0, 99, 98, 1, 0, 0, 0, 100, 103,
+		97, 101, 5, 25, 0, 0, 98, 100, 3, 12, 6, 0, 99, 98, 1, 0, 0, 0, 100, 103,
 		1, 0, 0, 0, 101, 99, 1, 0, 0, 0, 101, 102, 1, 0, 0, 0, 102, 104, 1, 0,
-		0, 0, 103, 101, 1, 0, 0, 0, 104, 105, 5, 6, 0, 0, 105, 11, 1, 0, 0, 0,
+		0, 0, 103, 101, 1, 0, 0, 0, 104, 105, 5, 26, 0, 0, 105, 11, 1, 0, 0, 0,
 		106, 112, 3, 14, 7, 0, 107, 112, 3, 16, 8, 0, 108, 112, 3, 56, 28, 0, 109,
 		112, 3, 22, 11, 0, 110, 112, 3, 18, 9, 0, 111, 106, 1, 0, 0, 0, 111, 107,
 		1, 0, 0, 0, 111, 108, 1, 0, 0, 0, 111, 109, 1, 0, 0, 0, 111, 110, 1, 0,
-		0, 0, 112, 13, 1, 0, 0, 0, 113, 114, 5, 30, 0, 0, 114, 115, 5, 7, 0, 0,
+		0, 0, 112, 13, 1, 0, 0, 0, 113, 114, 5, 30, 0, 0, 114, 115, 5, 20, 0, 0,
 		115, 116, 3, 28, 14, 0, 116, 117, 5, 29, 0, 0, 117, 15, 1, 0, 0, 0, 118,
-		119, 5, 8, 0, 0, 119, 120, 5, 23, 0, 0, 120, 121, 3, 28, 14, 0, 121, 122,
-		5, 24, 0, 0, 122, 123, 5, 9, 0, 0, 123, 124, 3, 10, 5, 0, 124, 125, 5,
-		29, 0, 0, 125, 17, 1, 0, 0, 0, 126, 127, 5, 10, 0, 0, 127, 128, 5, 23,
-		0, 0, 128, 129, 3, 28, 14, 0, 129, 130, 5, 24, 0, 0, 130, 131, 3, 10, 5,
+		119, 5, 8, 0, 0, 119, 120, 5, 21, 0, 0, 120, 121, 3, 28, 14, 0, 121, 122,
+		5, 22, 0, 0, 122, 123, 5, 9, 0, 0, 123, 124, 3, 10, 5, 0, 124, 125, 5,
+		29, 0, 0, 125, 17, 1, 0, 0, 0, 126, 127, 5, 10, 0, 0, 127, 128, 5, 21,
+		0, 0, 128, 129, 3, 28, 14, 0, 129, 130, 5, 22, 0, 0, 130, 131, 3, 10, 5,
 		0, 131, 132, 3, 20, 10, 0, 132, 133, 5, 29, 0, 0, 133, 19, 1, 0, 0, 0,
 		134, 135, 5, 11, 0, 0, 135, 137, 3, 10, 5, 0, 136, 134, 1, 0, 0, 0, 136,
 		137, 1, 0, 0, 0, 137, 21, 1, 0, 0, 0, 138, 139, 5, 12, 0, 0, 139, 140,
-		5, 23, 0, 0, 140, 145, 3, 24, 12, 0, 141, 142, 5, 28, 0, 0, 142, 144, 3,
+		5, 21, 0, 0, 140, 145, 3, 24, 12, 0, 141, 142, 5, 28, 0, 0, 142, 144, 3,
 		24, 12, 0, 143, 141, 1, 0, 0, 0, 144, 147, 1, 0, 0, 0, 145, 143, 1, 0,
 		0, 0, 145, 146, 1, 0, 0, 0, 146, 148, 1, 0, 0, 0, 147, 145, 1, 0, 0, 0,
-		148, 149, 5, 24, 0, 0, 149, 150, 5, 29, 0, 0, 150, 23, 1, 0, 0, 0, 151,
+		148, 149, 5, 22, 0, 0, 149, 150, 5, 29, 0, 0, 150, 23, 1, 0, 0, 0, 151,
 		154, 3, 28, 14, 0, 152, 154, 5, 33, 0, 0, 153, 151, 1, 0, 0, 0, 153, 152,
 		1, 0, 0, 0, 154, 25, 1, 0, 0, 0, 155, 156, 7, 1, 0, 0, 156, 27, 1, 0, 0,
 		0, 157, 158, 3, 30, 15, 0, 158, 29, 1, 0, 0, 0, 159, 163, 3, 34, 17, 0,
@@ -132,30 +133,30 @@ func babyduckParserInit() {
 		0, 0, 0, 178, 184, 3, 42, 21, 0, 179, 180, 3, 40, 20, 0, 180, 181, 3, 42,
 		21, 0, 181, 183, 1, 0, 0, 0, 182, 179, 1, 0, 0, 0, 183, 186, 1, 0, 0, 0,
 		184, 182, 1, 0, 0, 0, 184, 185, 1, 0, 0, 0, 185, 39, 1, 0, 0, 0, 186, 184,
-		1, 0, 0, 0, 187, 188, 7, 4, 0, 0, 188, 41, 1, 0, 0, 0, 189, 190, 5, 23,
-		0, 0, 190, 191, 3, 28, 14, 0, 191, 192, 5, 24, 0, 0, 192, 198, 1, 0, 0,
+		1, 0, 0, 0, 187, 188, 7, 4, 0, 0, 188, 41, 1, 0, 0, 0, 189, 190, 5, 21,
+		0, 0, 190, 191, 3, 28, 14, 0, 191, 192, 5, 22, 0, 0, 192, 198, 1, 0, 0,
 		0, 193, 195, 3, 36, 18, 0, 194, 193, 1, 0, 0, 0, 194, 195, 1, 0, 0, 0,
 		195, 196, 1, 0, 0, 0, 196, 198, 3, 44, 22, 0, 197, 189, 1, 0, 0, 0, 197,
 		194, 1, 0, 0, 0, 198, 43, 1, 0, 0, 0, 199, 202, 5, 30, 0, 0, 200, 202,
 		3, 26, 13, 0, 201, 199, 1, 0, 0, 0, 201, 200, 1, 0, 0, 0, 202, 45, 1, 0,
-		0, 0, 203, 204, 3, 48, 24, 0, 204, 47, 1, 0, 0, 0, 205, 206, 5, 20, 0,
-		0, 206, 207, 5, 30, 0, 0, 207, 209, 5, 23, 0, 0, 208, 210, 3, 50, 25, 0,
-		209, 208, 1, 0, 0, 0, 209, 210, 1, 0, 0, 0, 210, 211, 1, 0, 0, 0, 211,
-		212, 5, 24, 0, 0, 212, 213, 3, 54, 27, 0, 213, 49, 1, 0, 0, 0, 214, 219,
-		3, 52, 26, 0, 215, 216, 5, 28, 0, 0, 216, 218, 3, 52, 26, 0, 217, 215,
-		1, 0, 0, 0, 218, 221, 1, 0, 0, 0, 219, 217, 1, 0, 0, 0, 219, 220, 1, 0,
-		0, 0, 220, 51, 1, 0, 0, 0, 221, 219, 1, 0, 0, 0, 222, 223, 5, 30, 0, 0,
-		223, 224, 5, 27, 0, 0, 224, 225, 3, 8, 4, 0, 225, 53, 1, 0, 0, 0, 226,
-		228, 5, 25, 0, 0, 227, 229, 3, 2, 1, 0, 228, 227, 1, 0, 0, 0, 228, 229,
-		1, 0, 0, 0, 229, 230, 1, 0, 0, 0, 230, 231, 3, 10, 5, 0, 231, 232, 5, 26,
-		0, 0, 232, 233, 5, 29, 0, 0, 233, 55, 1, 0, 0, 0, 234, 235, 5, 30, 0, 0,
-		235, 237, 5, 23, 0, 0, 236, 238, 3, 58, 29, 0, 237, 236, 1, 0, 0, 0, 237,
-		238, 1, 0, 0, 0, 238, 239, 1, 0, 0, 0, 239, 240, 5, 24, 0, 0, 240, 241,
-		5, 29, 0, 0, 241, 57, 1, 0, 0, 0, 242, 247, 3, 28, 14, 0, 243, 244, 5,
-		28, 0, 0, 244, 246, 3, 28, 14, 0, 245, 243, 1, 0, 0, 0, 246, 249, 1, 0,
-		0, 0, 247, 245, 1, 0, 0, 0, 247, 248, 1, 0, 0, 0, 248, 59, 1, 0, 0, 0,
-		249, 247, 1, 0, 0, 0, 20, 64, 69, 80, 92, 101, 111, 136, 145, 153, 163,
-		173, 184, 194, 197, 201, 209, 219, 228, 237, 247,
+		0, 0, 203, 204, 3, 48, 24, 0, 204, 47, 1, 0, 0, 0, 205, 206, 5, 5, 0, 0,
+		206, 207, 5, 30, 0, 0, 207, 209, 5, 21, 0, 0, 208, 210, 3, 50, 25, 0, 209,
+		208, 1, 0, 0, 0, 209, 210, 1, 0, 0, 0, 210, 211, 1, 0, 0, 0, 211, 212,
+		5, 22, 0, 0, 212, 213, 3, 54, 27, 0, 213, 49, 1, 0, 0, 0, 214, 219, 3,
+		52, 26, 0, 215, 216, 5, 28, 0, 0, 216, 218, 3, 52, 26, 0, 217, 215, 1,
+		0, 0, 0, 218, 221, 1, 0, 0, 0, 219, 217, 1, 0, 0, 0, 219, 220, 1, 0, 0,
+		0, 220, 51, 1, 0, 0, 0, 221, 219, 1, 0, 0, 0, 222, 223, 5, 30, 0, 0, 223,
+		224, 5, 27, 0, 0, 224, 225, 3, 8, 4, 0, 225, 53, 1, 0, 0, 0, 226, 228,
+		5, 23, 0, 0, 227, 229, 3, 2, 1, 0, 228, 227, 1, 0, 0, 0, 228, 229, 1, 0,
+		0, 0, 229, 230, 1, 0, 0, 0, 230, 231, 3, 10, 5, 0, 231, 232, 5, 24, 0,
+		0, 232, 233, 5, 29, 0, 0, 233, 55, 1, 0, 0, 0, 234, 235, 5, 30, 0, 0, 235,
+		237, 5, 21, 0, 0, 236, 238, 3, 58, 29, 0, 237, 236, 1, 0, 0, 0, 237, 238,
+		1, 0, 0, 0, 238, 239, 1, 0, 0, 0, 239, 240, 5, 22, 0, 0, 240, 241, 5, 29,
+		0, 0, 241, 57, 1, 0, 0, 0, 242, 247, 3, 28, 14, 0, 243, 244, 5, 28, 0,
+		0, 244, 246, 3, 28, 14, 0, 245, 243, 1, 0, 0, 0, 246, 249, 1, 0, 0, 0,
+		247, 245, 1, 0, 0, 0, 247, 248, 1, 0, 0, 0, 248, 59, 1, 0, 0, 0, 249, 247,
+		1, 0, 0, 0, 20, 64, 69, 80, 92, 101, 111, 136, 145, 153, 163, 173, 184,
+		194, 197, 201, 209, 219, 228, 237, 247,
 	}
 	deserializer := antlr.NewATNDeserializer(nil)
 	staticData.atn = deserializer.Deserialize(staticData.serializedATN)
@@ -194,32 +195,32 @@ func NewBabyDuckParser(input antlr.TokenStream) *BabyDuckParser {
 // BabyDuckParser tokens.
 const (
 	BabyDuckParserEOF       = antlr.TokenEOF
-	BabyDuckParserT__0      = 1
-	BabyDuckParserT__1      = 2
-	BabyDuckParserT__2      = 3
-	BabyDuckParserT__3      = 4
-	BabyDuckParserT__4      = 5
-	BabyDuckParserT__5      = 6
-	BabyDuckParserT__6      = 7
-	BabyDuckParserT__7      = 8
-	BabyDuckParserT__8      = 9
-	BabyDuckParserT__9      = 10
-	BabyDuckParserT__10     = 11
-	BabyDuckParserT__11     = 12
-	BabyDuckParserT__12     = 13
-	BabyDuckParserT__13     = 14
-	BabyDuckParserT__14     = 15
-	BabyDuckParserT__15     = 16
-	BabyDuckParserT__16     = 17
-	BabyDuckParserT__17     = 18
-	BabyDuckParserT__18     = 19
-	BabyDuckParserVOID      = 20
-	BabyDuckParserINTTYPE   = 21
-	BabyDuckParserFLOATTYPE = 22
-	BabyDuckParserLPAREN    = 23
-	BabyDuckParserRPAREN    = 24
-	BabyDuckParserLBRACKET  = 25
-	BabyDuckParserRBRACKET  = 26
+	BabyDuckParserPROGRAM   = 1
+	BabyDuckParserMAIN      = 2
+	BabyDuckParserEND       = 3
+	BabyDuckParserVAR       = 4
+	BabyDuckParserVOID      = 5
+	BabyDuckParserINTTYPE   = 6
+	BabyDuckParserFLOATTYPE = 7
+	BabyDuckParserWHILE     = 8
+	BabyDuckParserDO        = 9
+	BabyDuckParserIF        = 10
+	BabyDuckParserELSE      = 11
+	BabyDuckParserPRINT     = 12
+	BabyDuckParserGT        = 13
+	BabyDuckParserLT        = 14
+	BabyDuckParserNE        = 15
+	BabyDuckParserPLUS      = 16
+	BabyDuckParserMINUS     = 17
+	BabyDuckParserMULT      = 18
+	BabyDuckParserDIV       = 19
+	BabyDuckParserASSIGN    = 20
+	BabyDuckParserLPAREN    = 21
+	BabyDuckParserRPAREN    = 22
+	BabyDuckParserLBRACKET  = 23
+	BabyDuckParserRBRACKET  = 24
+	BabyDuckParserLBRACE    = 25
+	BabyDuckParserRBRACE    = 26
 	BabyDuckParserCOLON     = 27
 	BabyDuckParserCOMMA     = 28
 	BabyDuckParserSEMICOLON = 29
@@ -272,9 +273,12 @@ type IProgramContext interface {
 	GetParser() antlr.Parser
 
 	// Getter signatures
+	PROGRAM() antlr.TerminalNode
 	ID() antlr.TerminalNode
 	SEMICOLON() antlr.TerminalNode
+	MAIN() antlr.TerminalNode
 	Body() IBodyContext
+	END() antlr.TerminalNode
 	Vars() IVarsContext
 	AllFuncs() []IFuncsContext
 	Funcs(i int) IFuncsContext
@@ -315,12 +319,20 @@ func NewProgramContext(parser antlr.Parser, parent antlr.ParserRuleContext, invo
 
 func (s *ProgramContext) GetParser() antlr.Parser { return s.parser }
 
+func (s *ProgramContext) PROGRAM() antlr.TerminalNode {
+	return s.GetToken(BabyDuckParserPROGRAM, 0)
+}
+
 func (s *ProgramContext) ID() antlr.TerminalNode {
 	return s.GetToken(BabyDuckParserID, 0)
 }
 
 func (s *ProgramContext) SEMICOLON() antlr.TerminalNode {
 	return s.GetToken(BabyDuckParserSEMICOLON, 0)
+}
+
+func (s *ProgramContext) MAIN() antlr.TerminalNode {
+	return s.GetToken(BabyDuckParserMAIN, 0)
 }
 
 func (s *ProgramContext) Body() IBodyContext {
@@ -337,6 +349,10 @@ func (s *ProgramContext) Body() IBodyContext {
 	}
 
 	return t.(IBodyContext)
+}
+
+func (s *ProgramContext) END() antlr.TerminalNode {
+	return s.GetToken(BabyDuckParserEND, 0)
 }
 
 func (s *ProgramContext) Vars() IVarsContext {
@@ -416,16 +432,6 @@ func (s *ProgramContext) ExitRule(listener antlr.ParseTreeListener) {
 	}
 }
 
-func (s *ProgramContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitProgram(s)
-
-	default:
-		return t.VisitChildren(s)
-	}
-}
-
 func (p *BabyDuckParser) Program() (localctx IProgramContext) {
 	localctx = NewProgramContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 0, BabyDuckParserRULE_program)
@@ -434,7 +440,7 @@ func (p *BabyDuckParser) Program() (localctx IProgramContext) {
 	p.EnterOuterAlt(localctx, 1)
 	{
 		p.SetState(60)
-		p.Match(BabyDuckParserT__0)
+		p.Match(BabyDuckParserPROGRAM)
 		if p.HasError() {
 			// Recognition error - abort rule
 			goto errorExit
@@ -463,7 +469,7 @@ func (p *BabyDuckParser) Program() (localctx IProgramContext) {
 	}
 	_la = p.GetTokenStream().LA(1)
 
-	if _la == BabyDuckParserT__3 {
+	if _la == BabyDuckParserVAR {
 		{
 			p.SetState(63)
 			p.Vars()
@@ -492,7 +498,7 @@ func (p *BabyDuckParser) Program() (localctx IProgramContext) {
 	}
 	{
 		p.SetState(72)
-		p.Match(BabyDuckParserT__1)
+		p.Match(BabyDuckParserMAIN)
 		if p.HasError() {
 			// Recognition error - abort rule
 			goto errorExit
@@ -504,7 +510,7 @@ func (p *BabyDuckParser) Program() (localctx IProgramContext) {
 	}
 	{
 		p.SetState(74)
-		p.Match(BabyDuckParserT__2)
+		p.Match(BabyDuckParserEND)
 		if p.HasError() {
 			// Recognition error - abort rule
 			goto errorExit
@@ -532,6 +538,7 @@ type IVarsContext interface {
 	GetParser() antlr.Parser
 
 	// Getter signatures
+	VAR() antlr.TerminalNode
 	AllVar_decl() []IVar_declContext
 	Var_decl(i int) IVar_declContext
 
@@ -570,6 +577,10 @@ func NewVarsContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokin
 }
 
 func (s *VarsContext) GetParser() antlr.Parser { return s.parser }
+
+func (s *VarsContext) VAR() antlr.TerminalNode {
+	return s.GetToken(BabyDuckParserVAR, 0)
+}
 
 func (s *VarsContext) AllVar_decl() []IVar_declContext {
 	children := s.GetChildren()
@@ -632,16 +643,6 @@ func (s *VarsContext) ExitRule(listener antlr.ParseTreeListener) {
 	}
 }
 
-func (s *VarsContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitVars(s)
-
-	default:
-		return t.VisitChildren(s)
-	}
-}
-
 func (p *BabyDuckParser) Vars() (localctx IVarsContext) {
 	localctx = NewVarsContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 2, BabyDuckParserRULE_vars)
@@ -650,7 +651,7 @@ func (p *BabyDuckParser) Vars() (localctx IVarsContext) {
 	p.EnterOuterAlt(localctx, 1)
 	{
 		p.SetState(76)
-		p.Match(BabyDuckParserT__3)
+		p.Match(BabyDuckParserVAR)
 		if p.HasError() {
 			// Recognition error - abort rule
 			goto errorExit
@@ -799,16 +800,6 @@ func (s *Var_declContext) ExitRule(listener antlr.ParseTreeListener) {
 	}
 }
 
-func (s *Var_declContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitVar_decl(s)
-
-	default:
-		return t.VisitChildren(s)
-	}
-}
-
 func (p *BabyDuckParser) Var_decl() (localctx IVar_declContext) {
 	localctx = NewVar_declContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 4, BabyDuckParserRULE_var_decl)
@@ -933,16 +924,6 @@ func (s *Id_listContext) EnterRule(listener antlr.ParseTreeListener) {
 func (s *Id_listContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(BabyDuckListener); ok {
 		listenerT.ExitId_list(s)
-	}
-}
-
-func (s *Id_listContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitId_list(s)
-
-	default:
-		return t.VisitChildren(s)
 	}
 }
 
@@ -1081,16 +1062,6 @@ func (s *TypeContext) ExitRule(listener antlr.ParseTreeListener) {
 	}
 }
 
-func (s *TypeContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitType(s)
-
-	default:
-		return t.VisitChildren(s)
-	}
-}
-
 func (p *BabyDuckParser) Type_() (localctx ITypeContext) {
 	localctx = NewTypeContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 8, BabyDuckParserRULE_type)
@@ -1130,6 +1101,8 @@ type IBodyContext interface {
 	GetParser() antlr.Parser
 
 	// Getter signatures
+	LBRACE() antlr.TerminalNode
+	RBRACE() antlr.TerminalNode
 	AllStatement() []IStatementContext
 	Statement(i int) IStatementContext
 
@@ -1168,6 +1141,14 @@ func NewBodyContext(parser antlr.Parser, parent antlr.ParserRuleContext, invokin
 }
 
 func (s *BodyContext) GetParser() antlr.Parser { return s.parser }
+
+func (s *BodyContext) LBRACE() antlr.TerminalNode {
+	return s.GetToken(BabyDuckParserLBRACE, 0)
+}
+
+func (s *BodyContext) RBRACE() antlr.TerminalNode {
+	return s.GetToken(BabyDuckParserRBRACE, 0)
+}
 
 func (s *BodyContext) AllStatement() []IStatementContext {
 	children := s.GetChildren()
@@ -1230,16 +1211,6 @@ func (s *BodyContext) ExitRule(listener antlr.ParseTreeListener) {
 	}
 }
 
-func (s *BodyContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitBody(s)
-
-	default:
-		return t.VisitChildren(s)
-	}
-}
-
 func (p *BabyDuckParser) Body() (localctx IBodyContext) {
 	localctx = NewBodyContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 10, BabyDuckParserRULE_body)
@@ -1248,7 +1219,7 @@ func (p *BabyDuckParser) Body() (localctx IBodyContext) {
 	p.EnterOuterAlt(localctx, 1)
 	{
 		p.SetState(97)
-		p.Match(BabyDuckParserT__4)
+		p.Match(BabyDuckParserLBRACE)
 		if p.HasError() {
 			// Recognition error - abort rule
 			goto errorExit
@@ -1276,7 +1247,7 @@ func (p *BabyDuckParser) Body() (localctx IBodyContext) {
 	}
 	{
 		p.SetState(104)
-		p.Match(BabyDuckParserT__5)
+		p.Match(BabyDuckParserRBRACE)
 		if p.HasError() {
 			// Recognition error - abort rule
 			goto errorExit
@@ -1446,16 +1417,6 @@ func (s *StatementContext) ExitRule(listener antlr.ParseTreeListener) {
 	}
 }
 
-func (s *StatementContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitStatement(s)
-
-	default:
-		return t.VisitChildren(s)
-	}
-}
-
 func (p *BabyDuckParser) Statement() (localctx IStatementContext) {
 	localctx = NewStatementContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 12, BabyDuckParserRULE_statement)
@@ -1527,6 +1488,7 @@ type IAssignContext interface {
 
 	// Getter signatures
 	ID() antlr.TerminalNode
+	ASSIGN() antlr.TerminalNode
 	Expression() IExpressionContext
 	SEMICOLON() antlr.TerminalNode
 
@@ -1570,6 +1532,10 @@ func (s *AssignContext) ID() antlr.TerminalNode {
 	return s.GetToken(BabyDuckParserID, 0)
 }
 
+func (s *AssignContext) ASSIGN() antlr.TerminalNode {
+	return s.GetToken(BabyDuckParserASSIGN, 0)
+}
+
 func (s *AssignContext) Expression() IExpressionContext {
 	var t antlr.RuleContext
 	for _, ctx := range s.GetChildren() {
@@ -1610,16 +1576,6 @@ func (s *AssignContext) ExitRule(listener antlr.ParseTreeListener) {
 	}
 }
 
-func (s *AssignContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitAssign(s)
-
-	default:
-		return t.VisitChildren(s)
-	}
-}
-
 func (p *BabyDuckParser) Assign() (localctx IAssignContext) {
 	localctx = NewAssignContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 14, BabyDuckParserRULE_assign)
@@ -1634,7 +1590,7 @@ func (p *BabyDuckParser) Assign() (localctx IAssignContext) {
 	}
 	{
 		p.SetState(114)
-		p.Match(BabyDuckParserT__6)
+		p.Match(BabyDuckParserASSIGN)
 		if p.HasError() {
 			// Recognition error - abort rule
 			goto errorExit
@@ -1674,9 +1630,11 @@ type ICycleContext interface {
 	GetParser() antlr.Parser
 
 	// Getter signatures
+	WHILE() antlr.TerminalNode
 	LPAREN() antlr.TerminalNode
 	Expression() IExpressionContext
 	RPAREN() antlr.TerminalNode
+	DO() antlr.TerminalNode
 	Body() IBodyContext
 	SEMICOLON() antlr.TerminalNode
 
@@ -1716,6 +1674,10 @@ func NewCycleContext(parser antlr.Parser, parent antlr.ParserRuleContext, invoki
 
 func (s *CycleContext) GetParser() antlr.Parser { return s.parser }
 
+func (s *CycleContext) WHILE() antlr.TerminalNode {
+	return s.GetToken(BabyDuckParserWHILE, 0)
+}
+
 func (s *CycleContext) LPAREN() antlr.TerminalNode {
 	return s.GetToken(BabyDuckParserLPAREN, 0)
 }
@@ -1738,6 +1700,10 @@ func (s *CycleContext) Expression() IExpressionContext {
 
 func (s *CycleContext) RPAREN() antlr.TerminalNode {
 	return s.GetToken(BabyDuckParserRPAREN, 0)
+}
+
+func (s *CycleContext) DO() antlr.TerminalNode {
+	return s.GetToken(BabyDuckParserDO, 0)
 }
 
 func (s *CycleContext) Body() IBodyContext {
@@ -1780,23 +1746,13 @@ func (s *CycleContext) ExitRule(listener antlr.ParseTreeListener) {
 	}
 }
 
-func (s *CycleContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitCycle(s)
-
-	default:
-		return t.VisitChildren(s)
-	}
-}
-
 func (p *BabyDuckParser) Cycle() (localctx ICycleContext) {
 	localctx = NewCycleContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 16, BabyDuckParserRULE_cycle)
 	p.EnterOuterAlt(localctx, 1)
 	{
 		p.SetState(118)
-		p.Match(BabyDuckParserT__7)
+		p.Match(BabyDuckParserWHILE)
 		if p.HasError() {
 			// Recognition error - abort rule
 			goto errorExit
@@ -1824,7 +1780,7 @@ func (p *BabyDuckParser) Cycle() (localctx ICycleContext) {
 	}
 	{
 		p.SetState(122)
-		p.Match(BabyDuckParserT__8)
+		p.Match(BabyDuckParserDO)
 		if p.HasError() {
 			// Recognition error - abort rule
 			goto errorExit
@@ -1864,6 +1820,7 @@ type IConditionContext interface {
 	GetParser() antlr.Parser
 
 	// Getter signatures
+	IF() antlr.TerminalNode
 	LPAREN() antlr.TerminalNode
 	Expression() IExpressionContext
 	RPAREN() antlr.TerminalNode
@@ -1906,6 +1863,10 @@ func NewConditionContext(parser antlr.Parser, parent antlr.ParserRuleContext, in
 }
 
 func (s *ConditionContext) GetParser() antlr.Parser { return s.parser }
+
+func (s *ConditionContext) IF() antlr.TerminalNode {
+	return s.GetToken(BabyDuckParserIF, 0)
+}
 
 func (s *ConditionContext) LPAREN() antlr.TerminalNode {
 	return s.GetToken(BabyDuckParserLPAREN, 0)
@@ -1987,23 +1948,13 @@ func (s *ConditionContext) ExitRule(listener antlr.ParseTreeListener) {
 	}
 }
 
-func (s *ConditionContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitCondition(s)
-
-	default:
-		return t.VisitChildren(s)
-	}
-}
-
 func (p *BabyDuckParser) Condition() (localctx IConditionContext) {
 	localctx = NewConditionContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 18, BabyDuckParserRULE_condition)
 	p.EnterOuterAlt(localctx, 1)
 	{
 		p.SetState(126)
-		p.Match(BabyDuckParserT__9)
+		p.Match(BabyDuckParserIF)
 		if p.HasError() {
 			// Recognition error - abort rule
 			goto errorExit
@@ -2067,6 +2018,7 @@ type IElse_partContext interface {
 	GetParser() antlr.Parser
 
 	// Getter signatures
+	ELSE() antlr.TerminalNode
 	Body() IBodyContext
 
 	// IsElse_partContext differentiates from other interfaces.
@@ -2105,6 +2057,10 @@ func NewElse_partContext(parser antlr.Parser, parent antlr.ParserRuleContext, in
 
 func (s *Else_partContext) GetParser() antlr.Parser { return s.parser }
 
+func (s *Else_partContext) ELSE() antlr.TerminalNode {
+	return s.GetToken(BabyDuckParserELSE, 0)
+}
+
 func (s *Else_partContext) Body() IBodyContext {
 	var t antlr.RuleContext
 	for _, ctx := range s.GetChildren() {
@@ -2141,16 +2097,6 @@ func (s *Else_partContext) ExitRule(listener antlr.ParseTreeListener) {
 	}
 }
 
-func (s *Else_partContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitElse_part(s)
-
-	default:
-		return t.VisitChildren(s)
-	}
-}
-
 func (p *BabyDuckParser) Else_part() (localctx IElse_partContext) {
 	localctx = NewElse_partContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 20, BabyDuckParserRULE_else_part)
@@ -2164,10 +2110,10 @@ func (p *BabyDuckParser) Else_part() (localctx IElse_partContext) {
 	}
 	_la = p.GetTokenStream().LA(1)
 
-	if _la == BabyDuckParserT__10 {
+	if _la == BabyDuckParserELSE {
 		{
 			p.SetState(134)
-			p.Match(BabyDuckParserT__10)
+			p.Match(BabyDuckParserELSE)
 			if p.HasError() {
 				// Recognition error - abort rule
 				goto errorExit
@@ -2201,6 +2147,7 @@ type IPrint_stmtContext interface {
 	GetParser() antlr.Parser
 
 	// Getter signatures
+	PRINT() antlr.TerminalNode
 	LPAREN() antlr.TerminalNode
 	AllPrintexpr() []IPrintexprContext
 	Printexpr(i int) IPrintexprContext
@@ -2244,6 +2191,10 @@ func NewPrint_stmtContext(parser antlr.Parser, parent antlr.ParserRuleContext, i
 }
 
 func (s *Print_stmtContext) GetParser() antlr.Parser { return s.parser }
+
+func (s *Print_stmtContext) PRINT() antlr.TerminalNode {
+	return s.GetToken(BabyDuckParserPRINT, 0)
+}
 
 func (s *Print_stmtContext) LPAREN() antlr.TerminalNode {
 	return s.GetToken(BabyDuckParserLPAREN, 0)
@@ -2326,16 +2277,6 @@ func (s *Print_stmtContext) ExitRule(listener antlr.ParseTreeListener) {
 	}
 }
 
-func (s *Print_stmtContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitPrint_stmt(s)
-
-	default:
-		return t.VisitChildren(s)
-	}
-}
-
 func (p *BabyDuckParser) Print_stmt() (localctx IPrint_stmtContext) {
 	localctx = NewPrint_stmtContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 22, BabyDuckParserRULE_print_stmt)
@@ -2344,7 +2285,7 @@ func (p *BabyDuckParser) Print_stmt() (localctx IPrint_stmtContext) {
 	p.EnterOuterAlt(localctx, 1)
 	{
 		p.SetState(138)
-		p.Match(BabyDuckParserT__11)
+		p.Match(BabyDuckParserPRINT)
 		if p.HasError() {
 			// Recognition error - abort rule
 			goto errorExit
@@ -2507,16 +2448,6 @@ func (s *PrintexprContext) ExitRule(listener antlr.ParseTreeListener) {
 	}
 }
 
-func (s *PrintexprContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitPrintexpr(s)
-
-	default:
-		return t.VisitChildren(s)
-	}
-}
-
 func (p *BabyDuckParser) Printexpr() (localctx IPrintexprContext) {
 	localctx = NewPrintexprContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 24, BabyDuckParserRULE_printexpr)
@@ -2527,7 +2458,7 @@ func (p *BabyDuckParser) Printexpr() (localctx IPrintexprContext) {
 	}
 
 	switch p.GetTokenStream().LA(1) {
-	case BabyDuckParserT__15, BabyDuckParserT__16, BabyDuckParserLPAREN, BabyDuckParserID, BabyDuckParserINT, BabyDuckParserFLOAT:
+	case BabyDuckParserPLUS, BabyDuckParserMINUS, BabyDuckParserLPAREN, BabyDuckParserID, BabyDuckParserINT, BabyDuckParserFLOAT:
 		p.EnterOuterAlt(localctx, 1)
 		{
 			p.SetState(151)
@@ -2635,16 +2566,6 @@ func (s *ConstantContext) EnterRule(listener antlr.ParseTreeListener) {
 func (s *ConstantContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(BabyDuckListener); ok {
 		listenerT.ExitConstant(s)
-	}
-}
-
-func (s *ConstantContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitConstant(s)
-
-	default:
-		return t.VisitChildren(s)
 	}
 }
 
@@ -2758,16 +2679,6 @@ func (s *ExpressionContext) EnterRule(listener antlr.ParseTreeListener) {
 func (s *ExpressionContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(BabyDuckListener); ok {
 		listenerT.ExitExpression(s)
-	}
-}
-
-func (s *ExpressionContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitExpression(s)
-
-	default:
-		return t.VisitChildren(s)
 	}
 }
 
@@ -2918,16 +2829,6 @@ func (s *Rel_exprContext) ExitRule(listener antlr.ParseTreeListener) {
 	}
 }
 
-func (s *Rel_exprContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitRel_expr(s)
-
-	default:
-		return t.VisitChildren(s)
-	}
-}
-
 func (p *BabyDuckParser) Rel_expr() (localctx IRel_exprContext) {
 	localctx = NewRel_exprContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 30, BabyDuckParserRULE_rel_expr)
@@ -2976,6 +2877,12 @@ type IRelopContext interface {
 
 	// GetParser returns the parser.
 	GetParser() antlr.Parser
+
+	// Getter signatures
+	GT() antlr.TerminalNode
+	LT() antlr.TerminalNode
+	NE() antlr.TerminalNode
+
 	// IsRelopContext differentiates from other interfaces.
 	IsRelopContext()
 }
@@ -3011,6 +2918,19 @@ func NewRelopContext(parser antlr.Parser, parent antlr.ParserRuleContext, invoki
 }
 
 func (s *RelopContext) GetParser() antlr.Parser { return s.parser }
+
+func (s *RelopContext) GT() antlr.TerminalNode {
+	return s.GetToken(BabyDuckParserGT, 0)
+}
+
+func (s *RelopContext) LT() antlr.TerminalNode {
+	return s.GetToken(BabyDuckParserLT, 0)
+}
+
+func (s *RelopContext) NE() antlr.TerminalNode {
+	return s.GetToken(BabyDuckParserNE, 0)
+}
+
 func (s *RelopContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
@@ -3028,16 +2948,6 @@ func (s *RelopContext) EnterRule(listener antlr.ParseTreeListener) {
 func (s *RelopContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(BabyDuckListener); ok {
 		listenerT.ExitRelop(s)
-	}
-}
-
-func (s *RelopContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitRelop(s)
-
-	default:
-		return t.VisitChildren(s)
 	}
 }
 
@@ -3223,16 +3133,6 @@ func (s *Add_exprContext) ExitRule(listener antlr.ParseTreeListener) {
 	}
 }
 
-func (s *Add_exprContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitAdd_expr(s)
-
-	default:
-		return t.VisitChildren(s)
-	}
-}
-
 func (p *BabyDuckParser) Add_expr() (localctx IAdd_exprContext) {
 	localctx = NewAdd_exprContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 34, BabyDuckParserRULE_add_expr)
@@ -3250,7 +3150,7 @@ func (p *BabyDuckParser) Add_expr() (localctx IAdd_exprContext) {
 	}
 	_la = p.GetTokenStream().LA(1)
 
-	for _la == BabyDuckParserT__15 || _la == BabyDuckParserT__16 {
+	for _la == BabyDuckParserPLUS || _la == BabyDuckParserMINUS {
 		{
 			p.SetState(168)
 			p.Addop()
@@ -3287,6 +3187,11 @@ type IAddopContext interface {
 
 	// GetParser returns the parser.
 	GetParser() antlr.Parser
+
+	// Getter signatures
+	PLUS() antlr.TerminalNode
+	MINUS() antlr.TerminalNode
+
 	// IsAddopContext differentiates from other interfaces.
 	IsAddopContext()
 }
@@ -3322,6 +3227,15 @@ func NewAddopContext(parser antlr.Parser, parent antlr.ParserRuleContext, invoki
 }
 
 func (s *AddopContext) GetParser() antlr.Parser { return s.parser }
+
+func (s *AddopContext) PLUS() antlr.TerminalNode {
+	return s.GetToken(BabyDuckParserPLUS, 0)
+}
+
+func (s *AddopContext) MINUS() antlr.TerminalNode {
+	return s.GetToken(BabyDuckParserMINUS, 0)
+}
+
 func (s *AddopContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
@@ -3342,16 +3256,6 @@ func (s *AddopContext) ExitRule(listener antlr.ParseTreeListener) {
 	}
 }
 
-func (s *AddopContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitAddop(s)
-
-	default:
-		return t.VisitChildren(s)
-	}
-}
-
 func (p *BabyDuckParser) Addop() (localctx IAddopContext) {
 	localctx = NewAddopContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 36, BabyDuckParserRULE_addop)
@@ -3362,7 +3266,7 @@ func (p *BabyDuckParser) Addop() (localctx IAddopContext) {
 		p.SetState(176)
 		_la = p.GetTokenStream().LA(1)
 
-		if !(_la == BabyDuckParserT__15 || _la == BabyDuckParserT__16) {
+		if !(_la == BabyDuckParserPLUS || _la == BabyDuckParserMINUS) {
 			p.GetErrorHandler().RecoverInline(p)
 		} else {
 			p.GetErrorHandler().ReportMatch(p)
@@ -3534,16 +3438,6 @@ func (s *TermContext) ExitRule(listener antlr.ParseTreeListener) {
 	}
 }
 
-func (s *TermContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitTerm(s)
-
-	default:
-		return t.VisitChildren(s)
-	}
-}
-
 func (p *BabyDuckParser) Term() (localctx ITermContext) {
 	localctx = NewTermContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 38, BabyDuckParserRULE_term)
@@ -3561,7 +3455,7 @@ func (p *BabyDuckParser) Term() (localctx ITermContext) {
 	}
 	_la = p.GetTokenStream().LA(1)
 
-	for _la == BabyDuckParserT__17 || _la == BabyDuckParserT__18 {
+	for _la == BabyDuckParserMULT || _la == BabyDuckParserDIV {
 		{
 			p.SetState(179)
 			p.Mulop()
@@ -3598,6 +3492,11 @@ type IMulopContext interface {
 
 	// GetParser returns the parser.
 	GetParser() antlr.Parser
+
+	// Getter signatures
+	MULT() antlr.TerminalNode
+	DIV() antlr.TerminalNode
+
 	// IsMulopContext differentiates from other interfaces.
 	IsMulopContext()
 }
@@ -3633,6 +3532,15 @@ func NewMulopContext(parser antlr.Parser, parent antlr.ParserRuleContext, invoki
 }
 
 func (s *MulopContext) GetParser() antlr.Parser { return s.parser }
+
+func (s *MulopContext) MULT() antlr.TerminalNode {
+	return s.GetToken(BabyDuckParserMULT, 0)
+}
+
+func (s *MulopContext) DIV() antlr.TerminalNode {
+	return s.GetToken(BabyDuckParserDIV, 0)
+}
+
 func (s *MulopContext) GetRuleContext() antlr.RuleContext {
 	return s
 }
@@ -3653,16 +3561,6 @@ func (s *MulopContext) ExitRule(listener antlr.ParseTreeListener) {
 	}
 }
 
-func (s *MulopContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitMulop(s)
-
-	default:
-		return t.VisitChildren(s)
-	}
-}
-
 func (p *BabyDuckParser) Mulop() (localctx IMulopContext) {
 	localctx = NewMulopContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 40, BabyDuckParserRULE_mulop)
@@ -3673,7 +3571,7 @@ func (p *BabyDuckParser) Mulop() (localctx IMulopContext) {
 		p.SetState(187)
 		_la = p.GetTokenStream().LA(1)
 
-		if !(_la == BabyDuckParserT__17 || _la == BabyDuckParserT__18) {
+		if !(_la == BabyDuckParserMULT || _la == BabyDuckParserDIV) {
 			p.GetErrorHandler().RecoverInline(p)
 		} else {
 			p.GetErrorHandler().ReportMatch(p)
@@ -3820,16 +3718,6 @@ func (s *FactorContext) ExitRule(listener antlr.ParseTreeListener) {
 	}
 }
 
-func (s *FactorContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitFactor(s)
-
-	default:
-		return t.VisitChildren(s)
-	}
-}
-
 func (p *BabyDuckParser) Factor() (localctx IFactorContext) {
 	localctx = NewFactorContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 42, BabyDuckParserRULE_factor)
@@ -3865,7 +3753,7 @@ func (p *BabyDuckParser) Factor() (localctx IFactorContext) {
 			}
 		}
 
-	case BabyDuckParserT__15, BabyDuckParserT__16, BabyDuckParserID, BabyDuckParserINT, BabyDuckParserFLOAT:
+	case BabyDuckParserPLUS, BabyDuckParserMINUS, BabyDuckParserID, BabyDuckParserINT, BabyDuckParserFLOAT:
 		p.EnterOuterAlt(localctx, 2)
 		p.SetState(194)
 		p.GetErrorHandler().Sync(p)
@@ -3874,7 +3762,7 @@ func (p *BabyDuckParser) Factor() (localctx IFactorContext) {
 		}
 		_la = p.GetTokenStream().LA(1)
 
-		if _la == BabyDuckParserT__15 || _la == BabyDuckParserT__16 {
+		if _la == BabyDuckParserPLUS || _la == BabyDuckParserMINUS {
 			{
 				p.SetState(193)
 				p.Addop()
@@ -3988,16 +3876,6 @@ func (s *ValueContext) EnterRule(listener antlr.ParseTreeListener) {
 func (s *ValueContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(BabyDuckListener); ok {
 		listenerT.ExitValue(s)
-	}
-}
-
-func (s *ValueContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitValue(s)
-
-	default:
-		return t.VisitChildren(s)
 	}
 }
 
@@ -4126,16 +4004,6 @@ func (s *FuncsContext) EnterRule(listener antlr.ParseTreeListener) {
 func (s *FuncsContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(BabyDuckListener); ok {
 		listenerT.ExitFuncs(s)
-	}
-}
-
-func (s *FuncsContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitFuncs(s)
-
-	default:
-		return t.VisitChildren(s)
 	}
 }
 
@@ -4277,16 +4145,6 @@ func (s *FuncContext) EnterRule(listener antlr.ParseTreeListener) {
 func (s *FuncContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(BabyDuckListener); ok {
 		listenerT.ExitFunc(s)
-	}
-}
-
-func (s *FuncContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitFunc(s)
-
-	default:
-		return t.VisitChildren(s)
 	}
 }
 
@@ -4478,16 +4336,6 @@ func (s *Param_listContext) ExitRule(listener antlr.ParseTreeListener) {
 	}
 }
 
-func (s *Param_listContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitParam_list(s)
-
-	default:
-		return t.VisitChildren(s)
-	}
-}
-
 func (p *BabyDuckParser) Param_list() (localctx IParam_listContext) {
 	localctx = NewParam_listContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 50, BabyDuckParserRULE_param_list)
@@ -4629,16 +4477,6 @@ func (s *ParamContext) EnterRule(listener antlr.ParseTreeListener) {
 func (s *ParamContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(BabyDuckListener); ok {
 		listenerT.ExitParam(s)
-	}
-}
-
-func (s *ParamContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitParam(s)
-
-	default:
-		return t.VisitChildren(s)
 	}
 }
 
@@ -4794,16 +4632,6 @@ func (s *FuncbodyContext) ExitRule(listener antlr.ParseTreeListener) {
 	}
 }
 
-func (s *FuncbodyContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitFuncbody(s)
-
-	default:
-		return t.VisitChildren(s)
-	}
-}
-
 func (p *BabyDuckParser) Funcbody() (localctx IFuncbodyContext) {
 	localctx = NewFuncbodyContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 54, BabyDuckParserRULE_funcbody)
@@ -4825,7 +4653,7 @@ func (p *BabyDuckParser) Funcbody() (localctx IFuncbodyContext) {
 	}
 	_la = p.GetTokenStream().LA(1)
 
-	if _la == BabyDuckParserT__3 {
+	if _la == BabyDuckParserVAR {
 		{
 			p.SetState(227)
 			p.Vars()
@@ -4968,16 +4796,6 @@ func (s *F_callContext) ExitRule(listener antlr.ParseTreeListener) {
 	}
 }
 
-func (s *F_callContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitF_call(s)
-
-	default:
-		return t.VisitChildren(s)
-	}
-}
-
 func (p *BabyDuckParser) F_call() (localctx IF_callContext) {
 	localctx = NewF_callContext(p, p.GetParserRuleContext(), p.GetState())
 	p.EnterRule(localctx, 56, BabyDuckParserRULE_f_call)
@@ -5007,7 +4825,7 @@ func (p *BabyDuckParser) F_call() (localctx IF_callContext) {
 	}
 	_la = p.GetTokenStream().LA(1)
 
-	if (int64(_la) & ^0x3f) == 0 && ((int64(1)<<_la)&7524777984) != 0 {
+	if (int64(_la) & ^0x3f) == 0 && ((int64(1)<<_la)&7518486528) != 0 {
 		{
 			p.SetState(236)
 			p.Arg_list()
@@ -5159,16 +4977,6 @@ func (s *Arg_listContext) EnterRule(listener antlr.ParseTreeListener) {
 func (s *Arg_listContext) ExitRule(listener antlr.ParseTreeListener) {
 	if listenerT, ok := listener.(BabyDuckListener); ok {
 		listenerT.ExitArg_list(s)
-	}
-}
-
-func (s *Arg_listContext) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case BabyDuckVisitor:
-		return t.VisitArg_list(s)
-
-	default:
-		return t.VisitChildren(s)
 	}
 }
 
