@@ -1,126 +1,148 @@
 package quads
 
-type Stack struct {
-	items []interface{}
-}
-
-// TypeStack implements a stack for types
-type TypeStack struct {
-	items []string
-}
-
-// OperatorStack implements a stack for operators
+// OperatorStack implementa una pila para operadores
 type OperatorStack struct {
 	items []string
 }
 
-// OperandStack implements a stack for operands
-type OperandStack struct {
-	items []interface{}
-}
+// NewOperatorStack crea una nueva pila de operadores
 func NewOperatorStack() *OperatorStack {
 	return &OperatorStack{
 		items: make([]string, 0),
 	}
 }
 
-// Constructor para OperandStack (puedes usar Stack genérico directamente)
-func NewOperandStack() *Stack {
-	return NewStack()
+// Push agrega un operador a la pila
+func (s *OperatorStack) Push(op string) {
+	s.items = append(s.items, op)
 }
 
+// Pop remueve y retorna el operador en el tope de la pila
+func (s *OperatorStack) Pop() (string, bool) {
+	if len(s.items) == 0 {
+		return "", false
+	}
 
-// Stack structure
-func NewStack() *Stack {
-	return &Stack{
-		items: []interface{}{},
-	}
-}
-func (s *Stack) Push(item interface{}) {
-	s.items = append(s.items, item)
-}
-func (s *Stack) Pop() (interface{}, bool) {
-	if s.IsEmpty() {
-		return nil, false
-	}
 	index := len(s.items) - 1
 	item := s.items[index]
 	s.items = s.items[:index]
+
 	return item, true
 }
 
+// Peek retorna el operador en el tope sin removerlo
+func (s *OperatorStack) Peek() (string, bool) {
+	if len(s.items) == 0 {
+		return "", false
+	}
+
+	return s.items[len(s.items)-1], true
+}
+
+// IsEmpty verifica si la pila está vacía
+func (s *OperatorStack) IsEmpty() bool {
+	return len(s.items) == 0
+}
+
+// Size retorna el tamaño de la pila
+func (s *OperatorStack) Size() int {
+	return len(s.items)
+}
+
+// Stack implementa una pila genérica para operandos
+type Stack struct {
+	items []interface{}
+}
+
+// NewOperandStack crea una nueva pila de operandos
+func NewOperandStack() *Stack {
+	return &Stack{
+		items: make([]interface{}, 0),
+	}
+}
+
+// Push agrega un operando a la pila
+func (s *Stack) Push(operand interface{}) {
+	s.items = append(s.items, operand)
+}
+
+// Pop remueve y retorna el operando en el tope de la pila
+func (s *Stack) Pop() (interface{}, bool) {
+	if len(s.items) == 0 {
+		return nil, false
+	}
+
+	index := len(s.items) - 1
+	item := s.items[index]
+	s.items = s.items[:index]
+
+	return item, true
+}
+
+// Peek retorna el operando en el tope sin removerlo
+func (s *Stack) Peek() (interface{}, bool) {
+	if len(s.items) == 0 {
+		return nil, false
+	}
+
+	return s.items[len(s.items)-1], true
+}
+
+// IsEmpty verifica si la pila está vacía
 func (s *Stack) IsEmpty() bool {
 	return len(s.items) == 0
 }
 
-func (s *Stack) Peek() (interface{}, bool) {
-	if s.IsEmpty() {
-		return nil, false
-	}
-	return s.items[len(s.items)-1], true
-}
+// Size retorna el tamaño de la pila
 func (s *Stack) Size() int {
 	return len(s.items)
 }
-func (s *Stack) Clear() {
-	s.items = make([]interface{}, 0)
+
+// TypeStack implementa una pila específica para tipos
+type TypeStack struct {
+	items []string
 }
 
+// NewTypeStack crea una nueva pila de tipos
 func NewTypeStack() *TypeStack {
 	return &TypeStack{
 		items: make([]string, 0),
 	}
 }
 
-func (s *TypeStack) Push(dataType string) {
-	s.items = append(s.items, dataType)
+// Push agrega un tipo a la pila
+func (s *TypeStack) Push(typ string) {
+	s.items = append(s.items, typ)
 }
 
+// Pop remueve y retorna el tipo en el tope de la pila
 func (s *TypeStack) Pop() (string, bool) {
-	if s.IsEmpty() {
+	if len(s.items) == 0 {
 		return "", false
 	}
 
 	index := len(s.items) - 1
 	item := s.items[index]
 	s.items = s.items[:index]
+
 	return item, true
 }
-func (s *TypeStack) IsEmpty() bool {
-	return len(s.items) == 0
-}
 
-func (s *OperatorStack) Peek() (string, bool) {
-	if s.IsEmpty() {
+// Peek retorna el tipo en el tope sin removerlo
+func (s *TypeStack) Peek() (string, bool) {
+	if len(s.items) == 0 {
 		return "", false
 	}
 
 	return s.items[len(s.items)-1], true
 }
 
-func (s *OperatorStack) IsEmpty() bool {
+// IsEmpty verifica si la pila está vacía
+func (s *TypeStack) IsEmpty() bool {
 	return len(s.items) == 0
 }
 
-func (s *OperatorStack) Size() int {
+// Size retorna el tamaño de la pila
+func (s *TypeStack) Size() int {
 	return len(s.items)
 }
-
-// Clear elimina todos los elementos de la pila
-func (s *OperatorStack) Clear() {
-	s.items = make([]string, 0)
-}
-
-func (s *OperatorStack) Push(operator string) {
-	s.items = append(s.items, operator)
-}
-func (s *OperatorStack) Pop() (string, bool) {
-	if s.IsEmpty() {
-		return "", false
-	}
-	index := len(s.items) - 1
-	operator := s.items[index]
-	s.items = s.items[:index]
-	return operator, true
-}
-

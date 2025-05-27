@@ -76,12 +76,10 @@ func (q *QuadrupleQueue) Update(index int, quad Quadruple) bool {
 
 // UpdateResult actualiza solo el resultado de un cuádruplo
 // Comúnmente usado para llenar los saltos pendientes
-func (q *QuadrupleQueue) UpdateResult(index int, result interface{}) bool {
-	if index < 0 || index >= len(q.Items) {
-		return false
+func (q *QuadrupleQueue) UpdateResult(index int, value interface{}) {
+	if index >= 0 && index < len(q.Items) {
+		q.Items[index].Result = value
 	}
-	q.Items[index].Result = result
-	return true
 }
 
 // String convierte la fila de cuádruplos a una representación legible
@@ -98,8 +96,8 @@ func (q *QuadrupleQueue) NewTemp(resultType string) string {
 	return fmt.Sprintf("t%d", q.TemCounter)
 }
 
-func (q *QuadrupleQueue) FillJump(index int, target int) {
+func (q *QuadrupleQueue) FillJump(index int, value interface{}) {
 	if index >= 0 && index < len(q.Items) {
-		q.Items[index].Result = target
+		q.Items[index].Result = value
 	}
 }

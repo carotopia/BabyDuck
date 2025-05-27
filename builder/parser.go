@@ -2,70 +2,68 @@ package builder
 
 import (
 	"BabyDuckCompiler/grammar"
-	"BabyDuckCompiler/memory"
 	"BabyDuckCompiler/symbols"
+	"fmt"
 	"github.com/antlr4-go/antlr/v4"
 )
 
-// Parser  handles the lexical analysis and parsing of BabyDuck source code.
-// It coordinates the ANTLR-generated components and symbol table construction.
+// Parser wraps the ANTLR parser and directory builder
 type Parser struct {
-	inputStream antlr.CharStream         // Source code input stream
-	lexer       *grammar.BabyDuckLexer   // Lexical analyzer
-	tokenStream *antlr.CommonTokenStream // Stream of tokens from lexer
-	parser      *grammar.BabyDuckParser  // Syntactic parser
-	builder     *DirectoryBuilder        // Symbol table constructor
+	sourceCode       string
+	debug            bool
+	directoryBuilder *DirectoryBuilder
+	functionDir      *symbols.FunctionDirectory
+	constantTable    *symbols.ConstantTable
 }
 
-// NewParser creates a new Parser instance for the given source code.
-// It initializes all necessary ANTLR components for lexical and syntactic analysis.
-//
-// Parameters:
-//
-//	sourceCode (string): The source code to be parsed.
-//
-// Returns:
-//
-//	*Parser: A pointer to the newly created Parser instance.
-func NewParser(sourceCode string) *Parser {
-	inputStream := antlr.NewInputStream(sourceCode)
-	lexer := grammar.NewBabyDuckLexer(inputStream)
-	tokenStream := antlr.NewCommonTokenStream(lexer, antlr.TokenDefaultChannel)
-	parser_b := grammar.NewBabyDuckParser(tokenStream)
-
-	memManager := memory.NewMemoryManager(memory.DefaultMemoryConfig) // Usaste memManager
-
-	funcDir := symbols.NewFunctionDirectory(memManager)
-	constTable := symbols.NewConstantTable(memManager) // <-- ahora sí, usa memManager
-
-	dirBuilder := NewDirectoryBuilder(false, funcDir, constTable) // <-- usa los 3 argumentos
+// NewParser creates a new parser instance
+func NewParser(sourceCode string, debug bool) *Parser {
+	// Crear symbol tables sin memory manager
+	funcDir := symbols.NewFunctionDirectory()
+	constTable := symbols.NewConstantTable() // ← Ahora sin parámetros
 
 	return &Parser{
-		inputStream: inputStream,
-		lexer:       lexer,
-		tokenStream: tokenStream,
-		parser:      parser_b,
-		builder:     dirBuilder,
+		sourceCode:    sourceCode,
+		debug:         debug,
+		functionDir:   funcDir,
+		constantTable: constTable,
 	}
 }
 
-// Parse performs the complete analysis of the source code.
-// It walks the parse tree to build the symbol table and collect semantic errors.
-//
-// Returns:
-//
-//	*symbol.FunctionDirectory: The constructed function directory containing symbol tables.
-//	[]string: A list of errors encountered during parsing.
+// Parse parses the source code and returns the symbol table and errors
 func (p *Parser) Parse() (*symbols.FunctionDirectory, []string) {
-	parseTree := p.parser.Program()
-	antlr.ParseTreeWalkerDefault.Walk(p.builder, parseTree)
+	// Create input stream
+	input := antlr.NewInputStream(p.sourceCode)
 
-	return p.builder.Directory, p.builder.Errors
+	// Create lexer
+	lexer := grammar.NewBabyDuckLexer(input)
+
+	// Create token stream
+	stream := antlr.NewCommonTokenStream(lexer, 0)
+
+	// Create parser
+	parser := grammar.NewBabyDuckParser(stream)
+
+	// Create directory builder
+	p.directoryBuilder = NewDirectoryBuilder(p.debug, p.functionDir, p.constantTable)
+
+	// Parse and walk the tree
+	tree := parser.Program()
+
+	// If debug is enabled, also use debug listener
+	if p.debug {
+		debugListener := NewDebugListener(true)
+		antlr.ParseTreeWalkerDefault.Walk(debugListener, tree)
+		fmt.Println("--- Iniciando análisis semántico ---")
+	}
+
+	// Walk with main listener
+	antlr.ParseTreeWalkerDefault.Walk(p.directoryBuilder, tree)
+
+	return p.functionDir, p.directoryBuilder.Errors
 }
 
-func (p *Parser) GetDirectoryBuilder() (*DirectoryBuilder, bool) {
-	if p.builder == nil {
-		return nil, false
-	}
-	return p.builder, true
+// GetDirectoryBuilder returns the directory builder for accessing quadruples
+func (p *Parser) GetDirectoryBuilder() *DirectoryBuilder {
+	return p.directoryBuilder
 }

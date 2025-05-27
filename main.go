@@ -48,7 +48,6 @@ func printSymbolTable(directory *symbols.FunctionDirectory) {
 		} else {
 			fmt.Println("\n  No local variables defined.")
 		}
-
 	}
 
 	fmt.Println("\n" + strings.Repeat("=", 60))
@@ -75,13 +74,13 @@ func printQuadruples(quads []quads.Quadruple) {
 		result := fmt.Sprintf("%v", quad.Result)
 
 		// Handle empty values
-		if leftOp == "" {
+		if leftOp == "" || leftOp == "<nil>" {
 			leftOp = "_"
 		}
-		if rightOp == "" {
+		if rightOp == "" || rightOp == "<nil>" {
 			rightOp = "_"
 		}
-		if result == "" {
+		if result == "" || result == "<nil>" {
 			result = "_"
 		}
 
@@ -91,15 +90,40 @@ func printQuadruples(quads []quads.Quadruple) {
 
 	fmt.Println(strings.Repeat("=", 60) + "\n")
 }
+
+// printErrors prints compilation errors in a formatted way
+func printErrors(errors []string) {
+	if len(errors) == 0 {
+		return
+	}
+
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("COMPILATION ERRORS")
+	fmt.Println(strings.Repeat("=", 60))
+
+	for i, err := range errors {
+		fmt.Printf("%d. %s\n", i+1, err)
+	}
+
+	fmt.Println(strings.Repeat("=", 60))
+}
+
 func main() {
 	// Check if a source file was provided
 	if len(os.Args) < 2 {
 		fmt.Println("Error: Source file path required")
-		fmt.Println("Usage: go run main.go <filename.bdck>")
+		fmt.Println("Usage: go run main.go <filename.bdck> [debug]")
+		fmt.Println("  debug: optional flag to enable debug output")
 		os.Exit(1)
 	}
 
 	sourceFile := os.Args[1]
+
+	// Check if debug flag was provided
+	debug := false
+	if len(os.Args) > 2 && (os.Args[2] == "debug" || os.Args[2] == "-d" || os.Args[2] == "--debug") {
+		debug = true
+	}
 
 	// Read the source file
 	sourceCode, err := os.ReadFile(sourceFile)
@@ -109,33 +133,54 @@ func main() {
 	}
 
 	fmt.Printf("Compiling %s...\n", sourceFile)
+	if debug {
+		fmt.Println("Debug mode enabled")
+	}
+	fmt.Println(strings.Repeat("=", 60))
+
+	// Create parser with optional debug
+	newParser := builder.NewParser(string(sourceCode), debug)
 
 	// Parse the source code
-	newParser := builder.NewParser(string(sourceCode))
-	symbolTable, errors := newParser.Parse() // Assume Parse now returns quadruples too
+	symbolTable, errors := newParser.Parse()
 
 	// Print symbol table
 	printSymbolTable(symbolTable)
 
-	// Print quadruples if available
-	if dirBuilder, ok := newParser.GetDirectoryBuilder(); ok && dirBuilder.QuadQueue != nil {
-		printQuadruples(dirBuilder.QuadQueue.GetAll())
+	// Get the directory builder to access quadruples
+	dirBuilder := newParser.GetDirectoryBuilder()
 
+	// Print quadruples if available
+	if dirBuilder != nil && dirBuilder.QuadVisitor != nil {
+		// Access quadruples from the visitor
+		quadruples := dirBuilder.QuadVisitor.GetQuadruples()
+		printQuadruples(quadruples)
+	} else {
+		fmt.Println("\n⚠️  No quadruples generated or visitor not initialized.")
 	}
 
-	// Print compilation status
-	if len(errors) > 0 {
+	// Print constant table if available
+	if dirBuilder != nil && dirBuilder.ConstantTable != nil {
 		fmt.Println("\n" + strings.Repeat("=", 60))
-		fmt.Println("COMPILATION ERRORS")
+		fmt.Println("CONSTANT TABLE")
 		fmt.Println(strings.Repeat("=", 60))
-		for i, err := range errors {
-			fmt.Printf("%d. %s\n", i+1, err)
-		}
-		fmt.Println("\nCompilation failed with errors.")
+		dirBuilder.ConstantTable.Print()
+	}
+
+	// Print compilation errors
+	printErrors(errors)
+
+	// Print compilation summary
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("COMPILATION SUMMARY")
+	fmt.Println(strings.Repeat("=", 60))
+
+	if len(errors) > 0 {
+		fmt.Printf("❌ Compilation failed with %d error(s).\n", len(errors))
 		os.Exit(1)
 	} else {
-		fmt.Println("\nCompilation successful! No errors detected.")
+		fmt.Println("✅ Compilation successful! No errors detected.")
 	}
-	fmt.Println("\nFin de ejecución. Revisa tabla de símbolos y cuádruplos arriba.")
 
+	fmt.Println("\nFin de ejecución. Revisa tabla de símbolos y cuádruplos arriba.")
 }

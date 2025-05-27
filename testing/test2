@@ -1,64 +1,54 @@
-program BabyDuck;
+program TestSimple;
 
 var
-    globalCounter, counter, loopIndex: int;
-    totalSum, averageResult, temporaryValue: float;
+  a, b, c, d, e, f: int;
 
-void processInputs(floatInput: float, intInput: int) [
-    var
-        sumResult, rowIndex, columnIndex: int;
-        computedFloat: float;
-
-    {
-        rowIndex = 1;
-        columnIndex = 2;
-        sumResult = 0;
-        computedFloat = 3.0;
-        globalCounter = floatInput + 1;
-    }
+void rana(num: int) [
+  var
+    temp: int;
+  {
+    temp = num * 2 + 2;
+    print(temp);
+  }
 ];
 
-void processSecondaryInputs(floatInput: float, intInput: int) [
-    var
-        sumResult, rowIndex, columnIndex: int;
-        computedFloat: float;
+main {
+  a = 10;
+  b = 5;
+  c = 3;
+  d = 2;
 
-    {
-        rowIndex = 1;
-        columnIndex = 2;
-        sumResult = 0;
-        computedFloat = 3.0;
-        globalCounter = floatInput + 1;
-        pi = 10;
-    }
-];
+  e = a + b * c - d;
 
-main
-{
-    totalSum = 1 + 2;
-    globalCounter = (1 + 2) / 3;
+  f = (a - b) * (c + d);
 
-    counter = 1;
+  print("Valor de e:");
+  print(e);
 
-    print(totalSum > abc);
-    print(totalSum + 45);
+  print("Valor de f:");
+  print(f);
 
-    if (yy > 10) {
-        print("counter is 1");
-    } else {
-        print("counter is not 1");
-    };
+  if (a > b) {
+    print("a es mayor que b");
+  } else {
+    print("a no es mayor que b");
+  };
 
-    loopIndex = 2;
+  if (c < d) {
+    print("c es menor que d");
+  } else {
+    print("c no es menor que d");
+  };
 
-    while (zz < 10) do {
-        loopIndex = loopIndex + 1;
-        print(loopIndex);
-    };
+  while (a > 0) do {
+    print(a);
+    a = a - 1;
+  };
 
+  rana(5);
+  rana(8);
 
-    processInputs(1.0, loopIndex);
-    processSecondaryInputs(1.0, 1);
+  print("resultado final:");
+  print(a + b + c + d + e + f);
 }
-
 end

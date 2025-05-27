@@ -1,181 +1,227 @@
 package memory
 
-// Configuration defines the memory address ranges for each segment and type.
-type Configuration struct {
-	GlobalIntStart, GlobalIntEnd     int
-	GlobalFloatStart, GlobalFloatEnd int
-	GlobalBoolStart, GlobalBoolEnd   int
+import "fmt"
 
-	LocalIntStart, LocalIntEnd     int
-	LocalFloatStart, LocalFloatEnd int
-	LocalBoolStart, LocalBoolEnd   int
+// ExecutionMemoryMap - Mapa de memoria para la máquina virtual
+type ExecutionMemoryMap struct {
+	// Memoria Global
+	GlobalInts   map[int]int     // 1000-1999
+	GlobalFloats map[int]float64 // 2000-2999
+	GlobalBools  map[int]bool    // 3000-3999
 
-	TempIntStart, TempIntEnd     int
-	TempFloatStart, TempFloatEnd int
-	TempBoolStart, TempBoolEnd   int
+	// Pila de Activación (para funciones)
+	ActivationStack []*ActivationRecord
 
-	ConstIntStart, ConstIntEnd     int
-	ConstFloatStart, ConstFloatEnd int
-	ConstBoolStart, ConstBoolEnd   int
-
-	// Si necesitas string, agrégalo aquí...
+	// Memoria de Constantes
+	ConstantInts    map[int]int     // 10000-10999
+	ConstantFloats  map[int]float64 // 11000-11999
+	ConstantBools   map[int]bool    // 12000-12999
+	ConstantStrings map[int]string  // 13000-13999
 }
 
-// DefaultMemoryConfig sets the standard memory map for your compiler
-var DefaultMemoryConfig = Configuration{
-	GlobalIntStart:   1000, GlobalIntEnd:   1999,
-	GlobalFloatStart: 2000, GlobalFloatEnd: 2999,
-	GlobalBoolStart:  3000, GlobalBoolEnd:  3999,
+// ActivationRecord - Registro de activación para cada función
+type ActivationRecord struct {
+	FunctionName string
 
-	LocalIntStart:    4000, LocalIntEnd:    4999,
-	LocalFloatStart:  5000, LocalFloatEnd:  5999,
-	LocalBoolStart:   6000, LocalBoolEnd:   6999,
+	// Memoria Local de la función
+	LocalInts   map[int]int     // 4000-4999
+	LocalFloats map[int]float64 // 5000-5999
+	LocalBools  map[int]bool    // 6000-6999
 
-	TempIntStart:     7000, TempIntEnd:     7999,
-	TempFloatStart:   8000, TempFloatEnd:   8999,
-	TempBoolStart:    9000, TempBoolEnd:    9999,
+	// Memoria Temporal de la función
+	TempInts   map[int]int     // 7000-7999
+	TempFloats map[int]float64 // 8000-8999
+	TempBools  map[int]bool    // 9000-9999
 
-	ConstIntStart:    10000, ConstIntEnd:    10999,
-	ConstFloatStart:  11000, ConstFloatEnd:  11999,
-	ConstBoolStart:   12000, ConstBoolEnd:   12999,
+	// Dirección de retorno
+	ReturnAddress int
+
+	// Parámetros pasados a la función
+	Parameters map[int]interface{}
 }
 
-// MemoryManager keeps track of the next available address for each segment/type.
-type MemoryManager struct {
-	config Configuration
-
-	nextGlobalInt, nextGlobalFloat, nextGlobalBool   int
-	nextLocalInt, nextLocalFloat, nextLocalBool      int
-	nextTempInt, nextTempFloat, nextTempBool         int
-	nextConstInt, nextConstFloat, nextConstBool      int
-}
-
-// NewMemoryManager creates a memory manager with the given config.
-func NewMemoryManager(config Configuration) *MemoryManager {
-	return &MemoryManager{
-		config: config,
-
-		nextGlobalInt:   config.GlobalIntStart,
-		nextGlobalFloat: config.GlobalFloatStart,
-		nextGlobalBool:  config.GlobalBoolStart,
-
-		nextLocalInt:    config.LocalIntStart,
-		nextLocalFloat:  config.LocalFloatStart,
-		nextLocalBool:   config.LocalBoolStart,
-
-		nextTempInt:     config.TempIntStart,
-		nextTempFloat:   config.TempFloatStart,
-		nextTempBool:    config.TempBoolStart,
-
-		nextConstInt:    config.ConstIntStart,
-		nextConstFloat:  config.ConstFloatStart,
-		nextConstBool:   config.ConstBoolStart,
+// NewExecutionMemoryMap crea un nuevo mapa de memoria
+func NewExecutionMemoryMap() *ExecutionMemoryMap {
+	return &ExecutionMemoryMap{
+		GlobalInts:      make(map[int]int),
+		GlobalFloats:    make(map[int]float64),
+		GlobalBools:     make(map[int]bool),
+		ActivationStack: make([]*ActivationRecord, 0),
+		ConstantInts:    make(map[int]int),
+		ConstantFloats:  make(map[int]float64),
+		ConstantBools:   make(map[int]bool),
+		ConstantStrings: make(map[int]string),
 	}
 }
 
-// Métodos para Globales
-func (m *MemoryManager) NextGlobalInt() int {
-	addr := m.nextGlobalInt
-	m.nextGlobalInt++
-	if addr > m.config.GlobalIntEnd {
-		panic("Global int memory overflow")
+// GetValue obtiene un valor de cualquier segmento de memoria
+func (emm *ExecutionMemoryMap) GetValue(address int) (interface{}, error) {
+	switch {
+	// Variables Globales
+	case address >= 1000 && address <= 1999:
+		if val, exists := emm.GlobalInts[address]; exists {
+			return val, nil
+		}
+	case address >= 2000 && address <= 2999:
+		if val, exists := emm.GlobalFloats[address]; exists {
+			return val, nil
+		}
+	case address >= 3000 && address <= 3999:
+		if val, exists := emm.GlobalBools[address]; exists {
+			return val, nil
+		}
+
+	// Variables Locales (registro de activación actual)
+	case address >= 4000 && address <= 4999:
+		if len(emm.ActivationStack) > 0 {
+			currentRecord := emm.ActivationStack[len(emm.ActivationStack)-1]
+			if val, exists := currentRecord.LocalInts[address]; exists {
+				return val, nil
+			}
+		}
+	case address >= 5000 && address <= 5999:
+		if len(emm.ActivationStack) > 0 {
+			currentRecord := emm.ActivationStack[len(emm.ActivationStack)-1]
+			if val, exists := currentRecord.LocalFloats[address]; exists {
+				return val, nil
+			}
+		}
+	case address >= 6000 && address <= 6999:
+		if len(emm.ActivationStack) > 0 {
+			currentRecord := emm.ActivationStack[len(emm.ActivationStack)-1]
+			if val, exists := currentRecord.LocalBools[address]; exists {
+				return val, nil
+			}
+		}
+
+	// Variables Temporales
+	case address >= 7000 && address <= 7999:
+		if len(emm.ActivationStack) > 0 {
+			currentRecord := emm.ActivationStack[len(emm.ActivationStack)-1]
+			if val, exists := currentRecord.TempInts[address]; exists {
+				return val, nil
+			}
+		}
+	case address >= 8000 && address <= 8999:
+		if len(emm.ActivationStack) > 0 {
+			currentRecord := emm.ActivationStack[len(emm.ActivationStack)-1]
+			if val, exists := currentRecord.TempFloats[address]; exists {
+				return val, nil
+			}
+		}
+	case address >= 9000 && address <= 9999:
+		if len(emm.ActivationStack) > 0 {
+			currentRecord := emm.ActivationStack[len(emm.ActivationStack)-1]
+			if val, exists := currentRecord.TempBools[address]; exists {
+				return val, nil
+			}
+		}
+
+	// Constantes
+	case address >= 10000 && address <= 10999:
+		if val, exists := emm.ConstantInts[address]; exists {
+			return val, nil
+		}
+	case address >= 11000 && address <= 11999:
+		if val, exists := emm.ConstantFloats[address]; exists {
+			return val, nil
+		}
+	case address >= 12000 && address <= 12999:
+		if val, exists := emm.ConstantBools[address]; exists {
+			return val, nil
+		}
+	case address >= 13000 && address <= 13999:
+		if val, exists := emm.ConstantStrings[address]; exists {
+			return val, nil
+		}
 	}
-	return addr
-}
-func (m *MemoryManager) NextGlobalFloat() int {
-	addr := m.nextGlobalFloat
-	m.nextGlobalFloat++
-	if addr > m.config.GlobalFloatEnd {
-		panic("Global float memory overflow")
-	}
-	return addr
-}
-func (m *MemoryManager) NextGlobalBool() int {
-	addr := m.nextGlobalBool
-	m.nextGlobalBool++
-	if addr > m.config.GlobalBoolEnd {
-		panic("Global bool memory overflow")
-	}
-	return addr
+
+	return nil, fmt.Errorf("dirección %d no encontrada en memoria", address)
 }
 
-// Métodos para Locales
-func (m *MemoryManager) NextLocalInt() int {
-	addr := m.nextLocalInt
-	m.nextLocalInt++
-	if addr > m.config.LocalIntEnd {
-		panic("Local int memory overflow")
+// SetValue establece un valor en cualquier segmento de memoria
+func (emm *ExecutionMemoryMap) SetValue(address int, value interface{}) error {
+	switch {
+	// Variables Globales
+	case address >= 1000 && address <= 1999:
+		emm.GlobalInts[address] = value.(int)
+	case address >= 2000 && address <= 2999:
+		emm.GlobalFloats[address] = value.(float64)
+	case address >= 3000 && address <= 3999:
+		emm.GlobalBools[address] = value.(bool)
+
+	// Variables Locales
+	case address >= 4000 && address <= 4999:
+		if len(emm.ActivationStack) > 0 {
+			currentRecord := emm.ActivationStack[len(emm.ActivationStack)-1]
+			currentRecord.LocalInts[address] = value.(int)
+		}
+	case address >= 5000 && address <= 5999:
+		if len(emm.ActivationStack) > 0 {
+			currentRecord := emm.ActivationStack[len(emm.ActivationStack)-1]
+			currentRecord.LocalFloats[address] = value.(float64)
+		}
+	case address >= 6000 && address <= 6999:
+		if len(emm.ActivationStack) > 0 {
+			currentRecord := emm.ActivationStack[len(emm.ActivationStack)-1]
+			currentRecord.LocalBools[address] = value.(bool)
+		}
+
+	// Variables Temporales
+	case address >= 7000 && address <= 7999:
+		if len(emm.ActivationStack) > 0 {
+			currentRecord := emm.ActivationStack[len(emm.ActivationStack)-1]
+			currentRecord.TempInts[address] = value.(int)
+		}
+	case address >= 8000 && address <= 8999:
+		if len(emm.ActivationStack) > 0 {
+			currentRecord := emm.ActivationStack[len(emm.ActivationStack)-1]
+			currentRecord.TempFloats[address] = value.(float64)
+		}
+	case address >= 9000 && address <= 9999:
+		if len(emm.ActivationStack) > 0 {
+			currentRecord := emm.ActivationStack[len(emm.ActivationStack)-1]
+			currentRecord.TempBools[address] = value.(bool)
+		}
+
+	default:
+		return fmt.Errorf("no se puede escribir en la dirección %d", address)
 	}
-	return addr
-}
-func (m *MemoryManager) NextLocalFloat() int {
-	addr := m.nextLocalFloat
-	m.nextLocalFloat++
-	if addr > m.config.LocalFloatEnd {
-		panic("Local float memory overflow")
-	}
-	return addr
-}
-func (m *MemoryManager) NextLocalBool() int {
-	addr := m.nextLocalBool
-	m.nextLocalBool++
-	if addr > m.config.LocalBoolEnd {
-		panic("Local bool memory overflow")
-	}
-	return addr
+
+	return nil
 }
 
-// Métodos para Temporales
-func (m *MemoryManager) NextTempInt() int {
-	addr := m.nextTempInt
-	m.nextTempInt++
-	if addr > m.config.TempIntEnd {
-		panic("Temporal int memory overflow")
+// PushActivationRecord crea un nuevo registro de activación
+func (emm *ExecutionMemoryMap) PushActivationRecord(functionName string, returnAddress int) {
+	record := &ActivationRecord{
+		FunctionName:  functionName,
+		LocalInts:     make(map[int]int),
+		LocalFloats:   make(map[int]float64),
+		LocalBools:    make(map[int]bool),
+		TempInts:      make(map[int]int),
+		TempFloats:    make(map[int]float64),
+		TempBools:     make(map[int]bool),
+		ReturnAddress: returnAddress,
+		Parameters:    make(map[int]interface{}),
 	}
-	return addr
-}
-func (m *MemoryManager) NextTempFloat() int {
-	addr := m.nextTempFloat
-	m.nextTempFloat++
-	if addr > m.config.TempFloatEnd {
-		panic("Temporal float memory overflow")
-	}
-	return addr
-}
-func (m *MemoryManager) NextTempBool() int {
-	addr := m.nextTempBool
-	m.nextTempBool++
-	if addr > m.config.TempBoolEnd {
-		panic("Temporal bool memory overflow")
-	}
-	return addr
+
+	emm.ActivationStack = append(emm.ActivationStack, record)
 }
 
-// Métodos para Constantes
-func (m *MemoryManager) NextConstInt() int {
-	addr := m.nextConstInt
-	m.nextConstInt++
-	if addr > m.config.ConstIntEnd {
-		panic("Constant int memory overflow")
+// PopActivationRecord elimina el registro de activación actual
+func (emm *ExecutionMemoryMap) PopActivationRecord() *ActivationRecord {
+	if len(emm.ActivationStack) == 0 {
+		return nil
 	}
-	return addr
-}
-func (m *MemoryManager) NextConstFloat() int {
-	addr := m.nextConstFloat
-	m.nextConstFloat++
-	if addr > m.config.ConstFloatEnd {
-		panic("Constant float memory overflow")
-	}
-	return addr
-}
-func (m *MemoryManager) NextConstBool() int {
-	addr := m.nextConstBool
-	m.nextConstBool++
-	if addr > m.config.ConstBoolEnd {
-		panic("Constant bool memory overflow")
-	}
-	return addr
+
+	record := emm.ActivationStack[len(emm.ActivationStack)-1]
+	emm.ActivationStack = emm.ActivationStack[:len(emm.ActivationStack)-1]
+
+	return record
 }
 
-// Puedes agregar métodos para strings, arreglos, etc. siguiendo el mismo patrón.
-
+// LoadConstants carga la tabla de constantes en memoria
+func (emm *ExecutionMemoryMap) LoadConstants(constantTable map[string]int) {
+	// Implementar carga de constantes desde la tabla
+	// Por ejemplo: emm.ConstantInts[10000] = 2
+}

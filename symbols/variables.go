@@ -15,6 +15,8 @@ type VariableTable map[string]Variable
 // AddVariable adds a new variable to the current scope, and checks if there is an current scope defined
 // If the variable is already in the current scope returns error
 // If the variable is missing an attribute returns error
+// ACTUALIZAR EL MÉTODO AddVariable EN TU variables.go:
+
 func (fd *FunctionDirectory) AddVariable(name string, varType string) error {
 	if len(fd.CurrentScope) == 0 {
 		return fmt.Errorf("error: no active scope defined")
@@ -32,26 +34,32 @@ func (fd *FunctionDirectory) AddVariable(name string, varType string) error {
 
 	var address int
 	if context == "program" {
-		// Global
+		// Variables globales - usar contadores globales
 		switch varType {
 		case "int":
-			address = fd.Memory.NextGlobalInt()
+			address = globalIntCounter
+			globalIntCounter++
 		case "float":
-			address = fd.Memory.NextGlobalFloat()
+			address = globalFloatCounter
+			globalFloatCounter++
 		case "bool":
-			address = fd.Memory.NextGlobalBool()
+			address = globalBoolCounter
+			globalBoolCounter++
 		default:
 			return fmt.Errorf("error: tipo de variable '%s' no soportado", varType)
 		}
 	} else {
-		// Local
+		// Variables locales - usar contadores locales
 		switch varType {
 		case "int":
-			address = fd.Memory.NextLocalInt()
+			address = localIntCounter
+			localIntCounter++
 		case "float":
-			address = fd.Memory.NextLocalFloat()
+			address = localFloatCounter
+			localFloatCounter++
 		case "bool":
-			address = fd.Memory.NextLocalBool()
+			address = localBoolCounter
+			localBoolCounter++
 		default:
 			return fmt.Errorf("error: tipo de variable '%s' no soportado", varType)
 		}
@@ -72,7 +80,6 @@ func (fd *FunctionDirectory) ValidateVariable(name string) error {
 	}
 	return fmt.Errorf("error: undefined variable '%s'", name)
 }
-
 
 // Looks for variable in a specific scope
 // Returns the type and wether it was found or not
