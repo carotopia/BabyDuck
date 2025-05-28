@@ -101,3 +101,136 @@ func (q *QuadrupleQueue) FillJump(index int, value interface{}) {
 		q.Items[index].Result = value
 	}
 }
+
+// FunctionOperations - Extensión para tu QuadrupleQueue existente
+type FunctionOperations struct {
+	*QuadrupleQueue
+	JumpStack     []int                    // Para manejar saltos pendientes
+	FunctionTable map[string]*FunctionInfo // Tabla de funciones
+}
+
+// FunctionInfo almacena información de funciones
+type FunctionInfo struct {
+	Name         string
+	ReturnType   string
+	StartAddress int
+	Parameters   []Parameter
+	LocalVars    map[string]int // nombre -> dirección
+	Size         int
+}
+
+type Parameter struct {
+	Name    string
+	Type    string
+	Address int
+}
+
+// NewFunctionOperations crea un nuevo manejador de operaciones de función
+func NewFunctionOperations() *FunctionOperations {
+	return &FunctionOperations{
+		QuadrupleQueue: NewQuadrupleQueue(),
+		JumpStack:      make([]int, 0),
+		FunctionTable:  make(map[string]*FunctionInfo),
+	}
+}
+
+// === CUÁDRUPLOS ESPECÍFICOS DE FUNCIONES ===
+
+// GenerateFUNC genera cuádruple para declaración de función
+func (fo *FunctionOperations) GenerateFUNC(name, returnType string) int {
+	startAddr := fo.Size()
+	fo.Add("FUNC", name, returnType, startAddr)
+
+	// Crear entrada en tabla de funciones
+	fo.FunctionTable[name] = &FunctionInfo{
+		Name:         name,
+		ReturnType:   returnType,
+		StartAddress: startAddr,
+		Parameters:   make([]Parameter, 0),
+		LocalVars:    make(map[string]int),
+		Size:         0,
+	}
+
+	return startAddr
+}
+
+// GeneratePARAM genera cuádruple para parámetro de función
+func (fo *FunctionOperations) GeneratePARAM(funcName, paramType, paramName string, address int) {
+	fo.Add("PARAM", paramType, paramName, address)
+
+	// Agregar a la función
+	if funcInfo, exists := fo.FunctionTable[funcName]; exists {
+		param := Parameter{
+			Name:    paramName,
+			Type:    paramType,
+			Address: address,
+		}
+		funcInfo.Parameters = append(funcInfo.Parameters, param)
+		funcInfo.Size++
+	}
+}
+
+// GenerateENDFUNC genera cuádruple para fin de función
+func (fo *FunctionOperations) GenerateENDFUNC() {
+	fo.Add("ENDFUNC", nil, nil, nil)
+}
+
+// GenerateERA genera cuádruple ERA (Espacio Registro Activación)
+func (fo *FunctionOperations) GenerateERA(functionName string) {
+	if funcInfo, exists := fo.FunctionTable[functionName]; exists {
+		fo.Add("ERA", functionName, nil, funcInfo.Size)
+	}
+}
+
+// GeneratePARAMETER genera cuádruple para pasar parámetro
+func (fo *FunctionOperations) GeneratePARAMETER(argument interface{}, position int) {
+	fo.Add("PARAMETER", argument, nil, position)
+}
+
+// GenerateGOSUB genera cuádruple GOSUB (llamada a función)
+func (fo *FunctionOperations) GenerateGOSUB(functionName string) {
+	if funcInfo, exists := fo.FunctionTable[functionName]; exists {
+		fo.Add("GOSUB", functionName, nil, funcInfo.StartAddress)
+	}
+}
+
+// GenerateRETURN genera cuádruple RETURN
+func (fo *FunctionOperations) GenerateRETURN(returnValue interface{}) {
+	fo.Add("RETURN", returnValue, nil, nil)
+}
+// === NUEVOS MÉTODOS PARA CUÁDRUPLOS DE FUNCIONES ===
+
+// GenerateFUNC genera cuádruple para declaración de función
+func (q *QuadrupleQueue) GenerateFUNC(name, returnType string) int {
+	return q.Add("FUNC", name, returnType, q.Size())
+}
+
+// GeneratePARAM genera cuádruple para parámetro de función
+func (q *QuadrupleQueue) GeneratePARAM(paramType, paramName string, address interface{}) {
+	q.Add("PARAM", paramType, paramName, address)
+}
+
+// GenerateENDFUNC genera cuádruple para fin de función
+func (q *QuadrupleQueue) GenerateENDFUNC() {
+	q.Add("ENDFUNC", nil, nil, nil)
+}
+
+// GenerateERA genera cuádruple ERA (Espacio Registro Activación)
+func (q *QuadrupleQueue) GenerateERA(functionName string, size int) {
+	q.Add("ERA", functionName, nil, size)
+}
+
+// GeneratePARAMETER genera cuádruple para pasar parámetro
+func (q *QuadrupleQueue) GeneratePARAMETER(argument interface{}, position int) {
+	q.Add("PARAMETER", argument, nil, position)
+}
+
+// GenerateGOSUB genera cuádruple GOSUB (llamada a función)
+func (q *QuadrupleQueue) GenerateGOSUB(functionName string, startAddr int) {
+	q.Add("GOSUB", functionName, nil, startAddr)
+}
+
+// GenerateRETURN genera cuádruple RETURN
+func (q *QuadrupleQueue) GenerateRETURN(returnValue interface{}) {
+	q.Add("RETURN", returnValue, nil, nil)
+}

@@ -19,6 +19,10 @@ type QuadrupleVisitor struct {
 	// Para manejo de funciones
 	currentFunction string
 	functionStarts  map[string]int // Mapeo función -> cuádruplo de inicio
+
+	// Manejar parametros y llamadas
+	parameterStack []interface{}
+	returnStack    []int
 }
 
 // NewQuadrupleVisitor crea un nuevo visitor para cuádruplos
@@ -32,6 +36,8 @@ func NewQuadrupleVisitor(builder *DirectoryBuilder) *QuadrupleVisitor {
 		pendingJumps:    []int{},
 		functionStarts:  make(map[string]int),
 		currentFunction: "program",
+		parameterStack:  make([]interface{}, 0),
+		returnStack:     make([]int, 0),
 	}
 }
 
@@ -144,16 +150,18 @@ func (qv *QuadrupleVisitor) VisitElsePart(ctx *grammar.Else_partContext) {
 // ========== MANEJO DE FUNCIONES ==========
 
 func (qv *QuadrupleVisitor) EnterFunction(functionName string) {
-	startQuad := qv.quadQueue.Size()
+	// Generar cuádruple FUNC
+	startQuad := qv.quadQueue.GenerateFUNC(functionName, "void") // ✅ Ahora funciona
 	qv.functionStarts[functionName] = startQuad
 	qv.currentFunction = functionName
 
 	qv.builder.Directory.SetFunctionQuadruples(functionName, startQuad, -1)
-	qv.builder.debugLog("Función '%s' inicia en cuádruplo %d", functionName, startQuad)
+	qv.builder.debugLog("Función '%s' inicia en cuádruple %d", functionName, startQuad)
 }
 
 func (qv *QuadrupleVisitor) ExitFunction(functionName string) {
-	qv.quadQueue.Add("ENDFUNC", "", "", "")
+	// Generar cuádruple ENDFUNC
+	qv.quadQueue.GenerateENDFUNC() // ✅ Ahora funciona
 
 	endQuad := qv.quadQueue.Size() - 1
 	startQuad := qv.functionStarts[functionName]
@@ -163,10 +171,19 @@ func (qv *QuadrupleVisitor) ExitFunction(functionName string) {
 	localCount := qv.builder.Directory.CountLocalVariables(functionName)
 	tempCount := qv.builder.Directory.CountTempVariables(functionName)
 
-	qv.builder.debugLog("Función '%s' termina en cuádruplo %d (locales: %d, temps: %d)",
+	qv.builder.debugLog("Función '%s' termina en cuádruple %d (locales: %d, temps: %d)",
 		functionName, endQuad, localCount, tempCount)
 
 	qv.currentFunction = "program"
+}
+func (qv *QuadrupleVisitor) HandleParameterDeclaration(paramType, paramName string, address int) {
+	// Generar cuádruple PARAM
+	qv.quadQueue.GeneratePARAM(paramType, paramName, address) // ✅ Ahora funciona
+
+	// Debug opcional
+	if qv.builder != nil && qv.builder.Debug {
+		fmt.Printf("[QuadVisitor] PARAM: %s %s -> %d\n", paramType, paramName, address)
+	}
 }
 
 func (qv *QuadrupleVisitor) VisitFunctionCall(ctx *grammar.F_callContext) {
@@ -178,6 +195,7 @@ func (qv *QuadrupleVisitor) VisitFunctionCall(ctx *grammar.F_callContext) {
 		return
 	}
 
+	// Recopilar argumentos de la pila
 	paramValues := make([]interface{}, numArgs)
 	for i := numArgs - 1; i >= 0; i-- {
 		argValue, ok := qv.operandStack.Pop()
@@ -189,23 +207,27 @@ func (qv *QuadrupleVisitor) VisitFunctionCall(ctx *grammar.F_callContext) {
 		paramValues[i] = argValue
 	}
 
-	for i, paramValue := range paramValues {
-		qv.quadQueue.Add("PARAM", paramValue, "", i)
-	}
-
+	// Generar cuádruplos para llamada a función
 	funcInfo, err := qv.builder.Directory.GetFunctionInfo(funcName)
 	if err != nil {
 		qv.builder.addError(err.Error())
 		return
 	}
 
+	// 1. ERA - Crear espacio de registro de activación
 	localVars := qv.builder.Directory.CountLocalVariables(funcName)
 	tempVars := qv.builder.Directory.CountTempVariables(funcName)
-	qv.quadQueue.Add("ERA", funcName, localVars, tempVars)
+	totalSize := localVars + tempVars + numArgs
+	qv.quadQueue.GenerateERA(funcName, totalSize)
 
+	// 2. PARAMETER - Pasar cada parámetro
+	for i, paramValue := range paramValues {
+		qv.quadQueue.GeneratePARAMETER(paramValue, i)
+	}
+
+	// 3. GOSUB - Llamar a la función
 	startAddress := funcInfo.StartQuadruple
-	returnAddress := qv.quadQueue.Size() + 2
-	qv.quadQueue.Add("GOSUB", funcName, startAddress, returnAddress)
+	qv.quadQueue.GenerateGOSUB(funcName, startAddress)
 
 	qv.builder.debugLog("Generada llamada completa a función: %s", funcName)
 }
@@ -359,7 +381,7 @@ func (qv *QuadrupleVisitor) hasElseClause(condCtx *grammar.ConditionContext) boo
 
 func (qv *QuadrupleVisitor) handleBodyWithElse() {
 	elseStart := qv.quadQueue.Size()
-	gotoEndIndex := qv.quadQueue.Add("GOTO", "", "", "")
+	gotoEndIndex := qv.quadQueue.Add("EEE", "", "", "")
 
 	if len(qv.pendingJumps) > 0 {
 		lastGotoFIndex := qv.pendingJumps[len(qv.pendingJumps)-1]
@@ -399,4 +421,13 @@ func (qv *QuadrupleVisitor) GetQuadruples() []quads.Quadruple {
 		return []quads.Quadruple{}
 	}
 	return qv.quadQueue.GetAll()
+}
+func (qv *QuadrupleVisitor) VisitReturnStatement(returnValue interface{}) {
+	if returnValue != nil {
+		// Si hay un valor de retorno, generar cuádruple RETURN
+		qv.quadQueue.GenerateRETURN(returnValue)
+	} else {
+		// Return sin valor
+		qv.quadQueue.GenerateRETURN(nil)
+	}
 }

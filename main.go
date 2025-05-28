@@ -4,6 +4,7 @@ import (
 	"BabyDuckCompiler/builder"
 	"BabyDuckCompiler/quads"
 	"BabyDuckCompiler/symbols"
+	"BabyDuckCompiler/vm" // <- NUEVO IMPORT
 	"fmt"
 	"os"
 	"strings"
@@ -112,17 +113,24 @@ func main() {
 	// Check if a source file was provided
 	if len(os.Args) < 2 {
 		fmt.Println("Error: Source file path required")
-		fmt.Println("Usage: go run main.go <filename.bdck> [debug]")
+		fmt.Println("Usage: go run main.go <filename.bdck> [debug] [--execute]")
 		fmt.Println("  debug: optional flag to enable debug output")
+		fmt.Println("  --execute: automatically execute after compilation")
 		os.Exit(1)
 	}
 
 	sourceFile := os.Args[1]
 
-	// Check if debug flag was provided
+	// Check flags
 	debug := false
-	if len(os.Args) > 2 && (os.Args[2] == "debug" || os.Args[2] == "-d" || os.Args[2] == "--debug") {
-		debug = true
+	autoExecute := false
+	for i := 2; i < len(os.Args); i++ {
+		switch os.Args[i] {
+		case "debug", "-d", "--debug":
+			debug = true
+		case "--execute", "-e", "--run":
+			autoExecute = true
+		}
 	}
 
 	// Read the source file
@@ -180,6 +188,34 @@ func main() {
 		os.Exit(1)
 	} else {
 		fmt.Println("✅ Compilation successful! No errors detected.")
+
+		// NUEVA SECCIÓN: Ejecutar con VM
+		if dirBuilder != nil && dirBuilder.QuadVisitor != nil {
+			quadruples := dirBuilder.QuadVisitor.GetQuadruples()
+
+			if autoExecute {
+				fmt.Println("\n🚀 Ejecutando automáticamente...")
+				err := vm.ExecuteProgram(quadruples, dirBuilder, debug)
+				if err != nil {
+					fmt.Printf("❌ Error durante la ejecución: %v\n", err)
+				} else {
+					fmt.Println("✅ Ejecución completada exitosamente.")
+				}
+			} else {
+				fmt.Print("\n🚀 ¿Ejecutar el programa? (y/n): ")
+				var response string
+				fmt.Scanln(&response)
+
+				if response == "y" || response == "Y" || response == "yes" || response == "" {
+					err := vm.ExecuteProgram(quadruples, dirBuilder, debug)
+					if err != nil {
+						fmt.Printf("❌ Error durante la ejecución: %v\n", err)
+					} else {
+						fmt.Println("✅ Ejecución completada exitosamente.")
+					}
+				}
+			}
+		}
 	}
 
 	fmt.Println("\nFin de ejecución. Revisa tabla de símbolos y cuádruplos arriba.")

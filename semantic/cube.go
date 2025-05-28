@@ -39,7 +39,7 @@ var Cube = SemanticCube{
 	},
 	"/": {
 		"int": {
-			"int":   "float",
+			"int":   "int",
 			"float": "float",
 		},
 		"float": {

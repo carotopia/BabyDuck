@@ -57,6 +57,20 @@ func (d *DirectoryBuilder) EnterFunc(ctx *grammar.FuncContext) {
 
 	// Notificar al visitor que estamos entrando a una función
 	d.QuadVisitor.EnterFunction(functionName)
+
+	// CORREGIDO: Generar cuádruplos para parámetros obteniendo nombres del contexto
+	if ctx.Param_list() != nil {
+		paramListCtx := ctx.Param_list().(*grammar.Param_listContext)
+		for i, paramCtx := range paramListCtx.AllParam() {
+			param := paramCtx.(*grammar.ParamContext)
+			paramType := param.Type_().GetText()
+			paramName := param.ID().GetText() // ← AQUÍ está el nombre
+
+			// Asignar direcciones en el rango local (4000-4999)
+			address := 4000 + i
+			d.QuadVisitor.HandleParameterDeclaration(paramType, paramName, address)
+		}
+	}
 }
 
 func (d *DirectoryBuilder) ExitFunc(ctx *grammar.FuncContext) {
@@ -221,31 +235,19 @@ func (d *DirectoryBuilder) ExitF_call(ctx *grammar.F_callContext) {
 }
 
 func (d *DirectoryBuilder) ExitFactor(ctx *grammar.FactorContext) {
-	d.QuadVisitor.VisitFactor(ctx)
-}
-
-func (d *DirectoryBuilder) ExitTerm(ctx *grammar.TermContext) {
-	d.QuadVisitor.VisitTerm(ctx)
+	d.QuadVisitor.VisitFactor(ctx) // ← MANTENER: procesa valores
 }
 
 func (d *DirectoryBuilder) EnterMulop(ctx *grammar.MulopContext) {
-	d.QuadVisitor.EnterMulop(ctx)
-}
-
-func (d *DirectoryBuilder) ExitAdd_expr(ctx *grammar.Add_exprContext) {
-	d.QuadVisitor.VisitAddExpression(ctx)
+	d.QuadVisitor.EnterMulop(ctx) // ← MANTENER: guarda operador en pila
 }
 
 func (d *DirectoryBuilder) EnterAddop(ctx *grammar.AddopContext) {
-	d.QuadVisitor.EnterAddop(ctx)
+	d.QuadVisitor.EnterAddop(ctx) // ← MANTENER: guarda operador en pila
 }
 
 func (d *DirectoryBuilder) ExitValue(ctx *grammar.ValueContext) {
-	d.QuadVisitor.VisitValue(ctx)
-}
-
-func (d *DirectoryBuilder) ExitRel_expr(ctx *grammar.Rel_exprContext) {
-	d.QuadVisitor.VisitRelationalExpression(ctx)
+	d.QuadVisitor.VisitValue(ctx) // ← MANTENER: procesa variables y constantes
 }
 
 func (d *DirectoryBuilder) ExitCycle(ctx *grammar.CycleContext) {
@@ -315,4 +317,16 @@ func (d *DirectoryBuilder) debugLog(format string, args ...interface{}) {
 // GetQuadVisitor returns the quadruple visitor for external access
 func (d *DirectoryBuilder) GetQuadVisitor() *QuadrupleVisitor {
 	return d.QuadVisitor
+}
+
+func (d *DirectoryBuilder) ExitTerm(ctx *grammar.TermContext) {
+	d.QuadVisitor.VisitTerm(ctx)
+}
+
+func (d *DirectoryBuilder) ExitAdd_expr(ctx *grammar.Add_exprContext) {
+	d.QuadVisitor.VisitAddExpression(ctx)
+}
+
+func (d *DirectoryBuilder) ExitRel_expr(ctx *grammar.Rel_exprContext) {
+	d.QuadVisitor.VisitRelationalExpression(ctx)
 }

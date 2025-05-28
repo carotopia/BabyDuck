@@ -1,54 +1,47 @@
-program TestSimple;
+program MathTest;
 
 var
-  a, b, c, d, e, f: int;
-
-void rana(num: int) [
-  var
-    temp: int;
-  {
-    temp = num * 2 + 2;
-    print(temp);
-  }
-];
+  a, b, c, d: int;
+  resultado1, resultado2, resultado3, resultado4: int;
+  final: int;
 
 main {
-  a = 10;
-  b = 5;
-  c = 3;
+  a = 20;
+  b = 4;
+  c = 8;
   d = 2;
 
-  e = a + b * c - d;
 
-  f = (a - b) * (c + d);
+  resultado1 = a / b;
+  print("Test 1 - División:");
+  print("20 / 4 =");
+  print(resultado1);
 
-  print("Valor de e:");
-  print(e);
 
-  print("Valor de f:");
-  print(f);
+  resultado2 = a + b * c - d;
+  print("Test 2 - Precedencia:");
+  print("20 + 4 * 8 - 2 =");
+  print(resultado2);
 
-  if (a > b) {
-    print("a es mayor que b");
-  } else {
-    print("a no es mayor que b");
-  };
+  resultado3 = a * d + c / b;
+  print("Test 3 - Multiplicación y división:");
+  print("20 * 2 + 8 / 4 =");
+  print(resultado3);
 
-  if (c < d) {
-    print("c es menor que d");
-  } else {
-    print("c no es menor que d");
-  };
+  resultado4 = c / d + a / b * c;
+  print("Test 4 - Divisiones exactas:");
+  print("8 / 2 + 20 / 4 * 8 =");
+  print(resultado4);
 
-  while (a > 0) do {
-    print(a);
-    a = a - 1;
-  };
+  final = resultado1 + resultado2 + resultado3 + resultado4;
+  print("Suma de todos los resultados:");
+  print(final);
 
-  rana(5);
-  rana(8);
-
-  print("resultado final:");
-  print(a + b + c + d + e + f);
+  print("=== RESULTADOS ESPERADOS ===");
+  print("Test 1: 5");
+  print("Test 2: 50");
+  print("Test 3: 42");
+  print("Test 4: 44");
+  print("Final: 141");
 }
 end
