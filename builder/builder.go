@@ -58,13 +58,13 @@ func (d *DirectoryBuilder) EnterFunc(ctx *grammar.FuncContext) {
 	// Notificar al visitor que estamos entrando a una función
 	d.QuadVisitor.EnterFunction(functionName)
 
-	// CORREGIDO: Generar cuádruplos para parámetros obteniendo nombres del contexto
+	// Generar cuádruplos para parámetros
 	if ctx.Param_list() != nil {
 		paramListCtx := ctx.Param_list().(*grammar.Param_listContext)
 		for i, paramCtx := range paramListCtx.AllParam() {
 			param := paramCtx.(*grammar.ParamContext)
 			paramType := param.Type_().GetText()
-			paramName := param.ID().GetText() // ← AQUÍ está el nombre
+			paramName := param.ID().GetText()
 
 			// Asignar direcciones en el rango local (4000-4999)
 			address := 4000 + i
@@ -121,12 +121,6 @@ func (d *DirectoryBuilder) ExitVar_decl(ctx *grammar.Var_declContext) {
 	}
 }
 
-// Alternativo: si tu gramática usa diferentes nombres de contexto
-func (d *DirectoryBuilder) ExitVariable_declaration(ctx interface{}) {
-	// Handle different context types for variable declarations
-	d.debugLog("Manejando declaración de variable alternativa")
-}
-
 func (d *DirectoryBuilder) EnterParam(ctx *grammar.ParamContext) {
 	paramName := ctx.ID().GetText()
 	paramType := ctx.Type_().GetText()
@@ -136,65 +130,8 @@ func (d *DirectoryBuilder) EnterParam(ctx *grammar.ParamContext) {
 	}
 }
 
-// ========== VALIDACIÓN DE EXPRESIONES ==========
-
-func (d *DirectoryBuilder) validateExpression(exp grammar.IExpressionContext) {
-	if exp != nil && exp.Rel_expr() != nil {
-		d.validateRelExpr(exp.Rel_expr())
-	}
-}
-
-func (d *DirectoryBuilder) validateRelExpr(ctx grammar.IRel_exprContext) {
-	if ctx == nil {
-		return
-	}
-
-	if left := ctx.Add_expr(0); left != nil {
-		d.validateAddExpr(left)
-	}
-
-	if ctx.Relop() != nil && len(ctx.AllAdd_expr()) > 1 {
-		if right := ctx.Add_expr(1); right != nil {
-			d.validateAddExpr(right)
-		}
-	}
-}
-
-func (d *DirectoryBuilder) validateAddExpr(add grammar.IAdd_exprContext) {
-	if add == nil {
-		return
-	}
-
-	for _, term := range add.AllTerm() {
-		d.validateTerm(term)
-	}
-}
-
-func (d *DirectoryBuilder) validateTerm(ctx grammar.ITermContext) {
-	for _, factor := range ctx.AllFactor() {
-		d.validateFactor(factor)
-	}
-}
-
-func (d *DirectoryBuilder) validateFactor(ctx grammar.IFactorContext) {
-	switch {
-	case ctx.Expression() != nil:
-		d.validateExpression(ctx.Expression())
-	case ctx.Value() != nil:
-		d.validateValue(ctx.Value())
-	}
-}
-
-func (d *DirectoryBuilder) validateValue(ctx grammar.IValueContext) {
-	if id := ctx.ID(); id != nil {
-		name := id.GetText()
-		if err := d.Directory.ValidateVariable(name); err != nil {
-			d.addError(err.Error())
-		}
-	}
-}
-
 // ========== CALLBACKS PARA GENERACIÓN DE CUÁDRUPLOS ==========
+// ENFOQUE LIMPIO: Solo callbacks esenciales, sin manejo de pilas
 
 func (d *DirectoryBuilder) ExitAssign(ctx *grammar.AssignContext) {
 	d.QuadVisitor.VisitAssignment(ctx)
@@ -234,49 +171,29 @@ func (d *DirectoryBuilder) ExitF_call(ctx *grammar.F_callContext) {
 	d.QuadVisitor.VisitFunctionCall(ctx)
 }
 
-func (d *DirectoryBuilder) ExitFactor(ctx *grammar.FactorContext) {
-	d.QuadVisitor.VisitFactor(ctx) // ← MANTENER: procesa valores
-}
-
-func (d *DirectoryBuilder) EnterMulop(ctx *grammar.MulopContext) {
-	d.QuadVisitor.EnterMulop(ctx) // ← MANTENER: guarda operador en pila
-}
-
-func (d *DirectoryBuilder) EnterAddop(ctx *grammar.AddopContext) {
-	d.QuadVisitor.EnterAddop(ctx) // ← MANTENER: guarda operador en pila
-}
-
-func (d *DirectoryBuilder) ExitValue(ctx *grammar.ValueContext) {
-	d.QuadVisitor.VisitValue(ctx) // ← MANTENER: procesa variables y constantes
-}
-
 func (d *DirectoryBuilder) ExitCycle(ctx *grammar.CycleContext) {
-	if ctx.Expression() != nil {
-		d.validateExpression(ctx.Expression())
-	}
+	// Los cycles también pueden tener expresiones que necesitan evaluación
+	// pero el visitor las manejará automáticamente cuando se encuentren
 }
 
 func (d *DirectoryBuilder) ExitProgram(ctx *grammar.ProgramContext) {
 	if d.QuadVisitor != nil {
 		d.QuadVisitor.PrintQuadruples()
 	}
-	if d.ConstantTable != nil { // ← Agregar verificación nil
+	if d.ConstantTable != nil {
 		d.ConstantTable.Print()
 	}
 }
 
+// ========== MÉTODOS DE VALIDACIÓN SIMPLIFICADOS ==========
+// Ya no necesitamos validar expresiones manualmente porque el visitor las maneja
+
 func (d *DirectoryBuilder) EnterExpression(ctx *grammar.ExpressionContext) {
-	d.debugLog("Entrando a expresión")
+	d.debugLog("Entrando a expresión: %s", ctx.GetText())
 }
 
-func (d *DirectoryBuilder) EnterTerm(ctx *grammar.TermContext) {
-	// Este método puede estar vacío o manejar lógica específica si es necesario
-}
-
-// Métodos adicionales para manejar diferentes contextos de declaración
 func (d *DirectoryBuilder) EnterMain(ctx interface{}) {
 	d.debugLog("Entrando al bloque main")
-	// Asegurar que estamos en el scope correcto
 	if len(d.Directory.CurrentScope) == 0 {
 		d.Directory.CurrentScope = append(d.Directory.CurrentScope, "main")
 	}
@@ -284,17 +201,6 @@ func (d *DirectoryBuilder) EnterMain(ctx interface{}) {
 
 func (d *DirectoryBuilder) ExitMain(ctx interface{}) {
 	d.debugLog("Saliendo del bloque main")
-}
-
-// Método genérico para declaraciones que podrían tener nombres diferentes
-func (d *DirectoryBuilder) handleVariableDeclaration(varType string, varNames []string) {
-	for _, varName := range varNames {
-		if err := d.Directory.AddVariable(varName, varType); err != nil {
-			d.addError(err.Error())
-			continue
-		}
-		d.debugLog("Variable declarada: %s (%s)", varName, varType)
-	}
 }
 
 // ========== UTILIDADES ==========
@@ -317,16 +223,4 @@ func (d *DirectoryBuilder) debugLog(format string, args ...interface{}) {
 // GetQuadVisitor returns the quadruple visitor for external access
 func (d *DirectoryBuilder) GetQuadVisitor() *QuadrupleVisitor {
 	return d.QuadVisitor
-}
-
-func (d *DirectoryBuilder) ExitTerm(ctx *grammar.TermContext) {
-	d.QuadVisitor.VisitTerm(ctx)
-}
-
-func (d *DirectoryBuilder) ExitAdd_expr(ctx *grammar.Add_exprContext) {
-	d.QuadVisitor.VisitAddExpression(ctx)
-}
-
-func (d *DirectoryBuilder) ExitRel_expr(ctx *grammar.Rel_exprContext) {
-	d.QuadVisitor.VisitRelationalExpression(ctx)
 }

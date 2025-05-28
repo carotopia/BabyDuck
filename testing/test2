@@ -18,7 +18,7 @@ main {
   print(resultado1);
 
 
-  resultado2 = a + b * c - d;
+  resultado2 = (a + b) * c - d;
   print("Test 2 - Precedencia:");
   print("20 + 4 * 8 - 2 =");
   print(resultado2);
