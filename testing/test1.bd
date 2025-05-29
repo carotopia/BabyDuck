@@ -1,15 +1,26 @@
-program tescdt;
-var a, b,c : int;
+program SimpleWhile;
+
+var
+  i: int;
 
 main {
-  a = 3 + 4;
-  b = a * 2;
-  c = 3 - 4;
-  if (a > b) {
-    print("a es mayor");
-  } else {
-    print("b es mayor");
+  print("Inicio del ciclo");
+
+  i = 1;
+  if (i < 3) {
+    print("i es mayor que 3");
+  }
+  else {
+    print("i es menor o igual a 3");
   };
+
+  while (i <= 3) do {
+    print("Iteracion:");
+    print(i);
+    i = i + 1;
+
+  };
+
+  print("Fin del ciclo");
 }
 end
-

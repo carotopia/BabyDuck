@@ -4,7 +4,6 @@ import (
 	"BabyDuckCompiler/builder"
 	"BabyDuckCompiler/quads"
 	"BabyDuckCompiler/symbols"
-	"BabyDuckCompiler/vm" // <- NUEVO IMPORT
 	"fmt"
 	"os"
 	"strings"
@@ -146,33 +145,37 @@ func main() {
 	}
 	fmt.Println(strings.Repeat("=", 60))
 
-	// Create parser with optional debug
-	newParser := builder.NewParser(string(sourceCode), debug)
+	// ========== CORRECCIÓN: Usar el parser final ==========
+	parser := builder.NewPureVisitorParser(string(sourceCode), debug)
 
-	// Parse the source code
-	symbolTable, errors := newParser.Parse()
+	// ========== CORRECCIÓN 2: Nombre correcto de variable ==========
+	symbolTable, errors := parser.Parse()
 
 	// Print symbol table
 	printSymbolTable(symbolTable)
 
-	// Get the directory builder to access quadruples
-	dirBuilder := newParser.GetDirectoryBuilder()
+	// ========== CORRECCIÓN 3: Obtener cuádruplos del parser puro ==========
+	// El nuevo parser ya no tiene DirectoryBuilder, sino que accede directo
+	quadruples := parser.GetQuadruples()
 
-	// Print quadruples if available
-	if dirBuilder != nil && dirBuilder.QuadVisitor != nil {
-		// Access quadruples from the visitor
-		quadruples := dirBuilder.QuadVisitor.GetQuadruples()
-		printQuadruples(quadruples)
-	} else {
-		fmt.Println("\n⚠️  No quadruples generated or visitor not initialized.")
+	// Convertir []interface{} a []quads.Quadruple
+	var typedQuadruples []quads.Quadruple
+	for _, q := range quadruples {
+		if quad, ok := q.(quads.Quadruple); ok {
+			typedQuadruples = append(typedQuadruples, quad)
+		}
 	}
 
-	// Print constant table if available
-	if dirBuilder != nil && dirBuilder.ConstantTable != nil {
+	// Print quadruples
+	printQuadruples(typedQuadruples)
+
+	// ========== CORRECCIÓN 4: Obtener tabla de constantes del parser puro ==========
+	constantTable := parser.GetConstantTable()
+	if constantTable != nil {
 		fmt.Println("\n" + strings.Repeat("=", 60))
 		fmt.Println("CONSTANT TABLE")
 		fmt.Println(strings.Repeat("=", 60))
-		dirBuilder.ConstantTable.Print()
+		constantTable.Print()
 	}
 
 	// Print compilation errors
@@ -189,30 +192,51 @@ func main() {
 	} else {
 		fmt.Println("✅ Compilation successful! No errors detected.")
 
-		// NUEVA SECCIÓN: Ejecutar con VM
-		if dirBuilder != nil && dirBuilder.QuadVisitor != nil {
-			quadruples := dirBuilder.QuadVisitor.GetQuadruples()
-
+		// ========== CORRECCIÓN 5: Ejecutar VM con los nuevos datos ==========
+		if len(typedQuadruples) > 0 {
 			if autoExecute {
 				fmt.Println("\n🚀 Ejecutando automáticamente...")
-				err := vm.ExecuteProgram(quadruples, dirBuilder, debug)
-				if err != nil {
-					fmt.Printf("❌ Error durante la ejecución: %v\n", err)
-				} else {
-					fmt.Println("✅ Ejecución completada exitosamente.")
-				}
+				fmt.Println(strings.Repeat("=", 60))
+				fmt.Println("🚀 EJECUTANDO CON MÁQUINA VIRTUAL")
+				fmt.Println(strings.Repeat("=", 60))
+
+				// ========== NOTA: Aquí necesitas adaptar tu VM ==========
+				// Tu VM probablemente espere un DirectoryBuilder, pero ahora tenemos parser puro
+				// Opción 1: Modificar VM para aceptar parser puro
+				// Opción 2: Crear adaptador
+
+				// Por ahora, simulamos la ejecución:
+				fmt.Println(">>> Simulando ejecución del programa...")
+				fmt.Println(">>> (VM necesita ser adaptada para el nuevo parser)")
+
+				// Descomenta y adapta cuando tengas la VM lista:
+				// err := vm.ExecuteProgram(typedQuadruples, parser, debug)
+				// if err != nil {
+				//     fmt.Printf("❌ Error durante la ejecución: %v\n", err)
+				// } else {
+				//     fmt.Println("✅ Ejecución completada exitosamente.")
+				// }
+
 			} else {
 				fmt.Print("\n🚀 ¿Ejecutar el programa? (y/n): ")
 				var response string
 				fmt.Scanln(&response)
 
 				if response == "y" || response == "Y" || response == "yes" || response == "" {
-					err := vm.ExecuteProgram(quadruples, dirBuilder, debug)
-					if err != nil {
-						fmt.Printf("❌ Error durante la ejecución: %v\n", err)
-					} else {
-						fmt.Println("✅ Ejecución completada exitosamente.")
-					}
+					fmt.Println(strings.Repeat("=", 60))
+					fmt.Println("🚀 EJECUTANDO CON MÁQUINA VIRTUAL")
+					fmt.Println(strings.Repeat("=", 60))
+
+					fmt.Println(">>> Simulando ejecución del programa...")
+					fmt.Println(">>> (VM necesita ser adaptada para el nuevo parser)")
+
+					// Descomenta y adapta cuando tengas la VM lista:
+					// err := vm.ExecuteProgram(typedQuadruples, parser, debug)
+					// if err != nil {
+					//     fmt.Printf("❌ Error durante la ejecución: %v\n", err)
+					// } else {
+					//     fmt.Println("✅ Ejecución completada exitosamente.")
+					// }
 				}
 			}
 		}

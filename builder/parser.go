@@ -3,25 +3,21 @@ package builder
 import (
 	"BabyDuckCompiler/grammar"
 	"BabyDuckCompiler/symbols"
-	"fmt"
 	"github.com/antlr4-go/antlr/v4"
 )
 
-// Parser wraps the ANTLR parser and manages the compilation process
-type Parser struct {
-	// Input
-	sourceCode string
-	debug      bool
-
-	// Core components
-	directoryBuilder *DirectoryBuilder
-	functionDir      *symbols.FunctionDirectory
-	constantTable    *symbols.ConstantTable
+// PureVisitorParser - Parser que usa la nueva arquitectura limpia
+type PureVisitorParser struct {
+	sourceCode    string
+	debug         bool
+	visitor       *PureQuadrupleVisitor
+	functionDir   *symbols.FunctionDirectory
+	constantTable *symbols.ConstantTable
 }
 
-// NewParser creates a new parser instance with initialized symbol tables
-func NewParser(sourceCode string, debug bool) *Parser {
-	return &Parser{
+// NewPureVisitorParser crea el parser con la nueva arquitectura
+func NewPureVisitorParser(sourceCode string, debug bool) *PureVisitorParser {
+	return &PureVisitorParser{
 		sourceCode:    sourceCode,
 		debug:         debug,
 		functionDir:   symbols.NewFunctionDirectory(),
@@ -29,93 +25,62 @@ func NewParser(sourceCode string, debug bool) *Parser {
 	}
 }
 
-// =============================================================================
-// MAIN PARSING FUNCTIONALITY
-// =============================================================================
-
-// Parse processes the source code and returns the symbol table and any errors
-func (p *Parser) Parse() (*symbols.FunctionDirectory, []string) {
-	// Create ANTLR parser
+// Parse - Método principal que maneja todo el proceso
+func (p *PureVisitorParser) Parse() (*symbols.FunctionDirectory, []string) {
+	// PASO 1: Crear parser ANTLR
 	parser := p.createANTLRParser()
 
-	// Create directory builder
-	p.directoryBuilder = NewDirectoryBuilder(p.debug, p.functionDir, p.constantTable)
-
-	// Parse the program
+	// PASO 2: Primera pasada - Builder para tabla de símbolos
+	builder := NewDirectoryBuilder(p.debug, p.functionDir, p.constantTable)
 	tree := parser.Program()
+	antlr.ParseTreeWalkerDefault.Walk(builder, tree)
 
-	// Walk the parse tree
-	p.walkParseTree(tree)
+	// PASO 3: Segunda pasada - Visitor puro para cuádruplos
+	p.visitor = NewPureQuadrupleVisitor(p.functionDir, p.constantTable, p.debug)
 
-	return p.functionDir, p.directoryBuilder.Errors
+	// CORRECCIÓN: Crear nuevo parser y hacer casting correcto
+	parser2 := p.createANTLRParser()
+	tree2 := parser2.Program()
+
+	// Hacer casting seguro de IProgramContext a *grammar.ProgramContext
+	if programCtx, ok := tree2.(*grammar.ProgramContext); ok && programCtx != nil {
+		p.visitor.VisitProgram(programCtx)
+	}
+
+	// PASO 4: Combinar errores y mostrar resultados
+	allErrors := append(builder.Errors, p.visitor.GetErrors()...)
+
+	if p.debug {
+		p.visitor.PrintQuadruples()
+		p.constantTable.Print()
+	}
+
+	return p.functionDir, allErrors
 }
 
-// =============================================================================
-// ANTLR SETUP
-// =============================================================================
-
-func (p *Parser) createANTLRParser() *grammar.BabyDuckParser {
-	// Create input stream
+func (p *PureVisitorParser) createANTLRParser() *grammar.BabyDuckParser {
 	input := antlr.NewInputStream(p.sourceCode)
-
-	// Create lexer
 	lexer := grammar.NewBabyDuckLexer(input)
-
-	// Create token stream
 	stream := antlr.NewCommonTokenStream(lexer, 0)
-
-	// Create and return parser
 	return grammar.NewBabyDuckParser(stream)
 }
 
-// =============================================================================
-// PARSE TREE WALKING
-// =============================================================================
+// ========== INTERFAZ PÚBLICA ==========
 
-func (p *Parser) walkParseTree(tree grammar.IProgramContext) {
-	if p.debug {
-		p.walkWithDebugListener(tree)
-	}
-
-	p.walkWithMainListener(tree)
-}
-
-func (p *Parser) walkWithDebugListener(tree grammar.IProgramContext) {
-	debugListener := NewDebugListener(true)
-	antlr.ParseTreeWalkerDefault.Walk(debugListener, tree)
-	fmt.Println("--- Starting semantic analysis ---")
-}
-
-func (p *Parser) walkWithMainListener(tree grammar.IProgramContext) {
-	antlr.ParseTreeWalkerDefault.Walk(p.directoryBuilder, tree)
-}
-
-// =============================================================================
-// PUBLIC INTERFACE
-// =============================================================================
-
-// GetDirectoryBuilder returns the directory builder for accessing quadruples
-func (p *Parser) GetDirectoryBuilder() *DirectoryBuilder {
-	return p.directoryBuilder
-}
-
-// GetFunctionDirectory returns the function directory
-func (p *Parser) GetFunctionDirectory() *symbols.FunctionDirectory {
+func (p *PureVisitorParser) GetFunctionDirectory() *symbols.FunctionDirectory {
 	return p.functionDir
 }
 
-// GetConstantTable returns the constant table
-func (p *Parser) GetConstantTable() *symbols.ConstantTable {
+func (p *PureVisitorParser) GetConstantTable() *symbols.ConstantTable {
 	return p.constantTable
 }
 
-// GetQuadruples returns the generated quadruples
-func (p *Parser) GetQuadruples() []interface{} {
-	if p.directoryBuilder == nil || p.directoryBuilder.QuadVisitor == nil {
+func (p *PureVisitorParser) GetQuadruples() []interface{} {
+	if p.visitor == nil {
 		return []interface{}{}
 	}
 
-	quads := p.directoryBuilder.QuadVisitor.GetQuadruples()
+	quads := p.visitor.GetQuadruples()
 	result := make([]interface{}, len(quads))
 	for i, quad := range quads {
 		result[i] = quad
@@ -123,25 +88,20 @@ func (p *Parser) GetQuadruples() []interface{} {
 	return result
 }
 
-// HasErrors returns true if there were compilation errors
-func (p *Parser) HasErrors() bool {
-	return p.directoryBuilder != nil && len(p.directoryBuilder.Errors) > 0
+func (p *PureVisitorParser) HasErrors() bool {
+	return p.visitor != nil && p.visitor.HasErrors()
 }
 
-// GetErrors returns all compilation errors
-func (p *Parser) GetErrors() []string {
-	if p.directoryBuilder == nil {
+func (p *PureVisitorParser) GetErrors() []string {
+	if p.visitor == nil {
 		return []string{}
 	}
-	return p.directoryBuilder.Errors
+	return p.visitor.GetErrors()
 }
 
-// PrintResults prints compilation results including quadruples and constants
-func (p *Parser) PrintResults() {
-	if p.directoryBuilder != nil {
-		if p.directoryBuilder.QuadVisitor != nil {
-			p.directoryBuilder.QuadVisitor.PrintQuadruples()
-		}
+func (p *PureVisitorParser) PrintResults() {
+	if p.visitor != nil {
+		p.visitor.PrintQuadruples()
 		if p.constantTable != nil {
 			p.constantTable.Print()
 		}
