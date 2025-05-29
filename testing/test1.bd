@@ -1,26 +1,32 @@
-program SimpleWhile;
+program CompilerV1;
 
-var
-  i: int;
+var n, factorial, i: int;
 
-main {
-  print("Inicio del ciclo");
-
-  i = 1;
-  if (i < 3) {
-    print("i es mayor que 3");
-  }
-  else {
-    print("i es menor o igual a 3");
-  };
-
-  while (i < 3) do {
-    print("Iteracion:");
-    print(i);
-    i = i + 1;
-
-  };
-
-  print("Fin del ciclo");
+void printNumber(n : int) [
+{
+    print("El numero es", n + n * 10);
 }
+];
+
+void a(n: int) [
+   {
+    printNumber(n);
+   }
+];
+
+main
+{
+    n = 5;
+    factorial = 1;
+
+    i = n;
+    while (i > 1) do {
+        factorial = factorial * i;
+        i = i - 1;
+    };
+
+    print("factorial", factorial);
+    a(5);
+}
+
 end

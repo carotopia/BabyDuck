@@ -1,47 +1,63 @@
-program MathTest;
+program TestFunciones;
 
 var
-  a, b, c, d: int;
-  resultado1, resultado2, resultado3, resultado4: int;
-  final: int;
+    resultado, base, exponente: int;
+
+
+void multiplicar(a: int, b: int) [
+
+    print("Multiplicando", a, "x", b);
+    print("Resultado:", a * b);} ];
+
+
+void areaRectangulo(largo: int, ancho: int) [
+
+    print("Calculando área del rectángulo");
+    print("Largo:", largo);
+    print("Ancho:", ancho);
+    multiplicar(largo, ancho);
+    print("Área calculada");
+ ];
+
+
+void cuadrado(num: int) [
+{
+    print("Calculando cuadrado de", num);
+    multiplicar(num, num);
+} ];
+
+
+void calculos(x: int, y: int) [
+{
+    print("=== INICIANDO CÁLCULOS ===");
+    print("Valores recibidos:", x, y);
+
+
+    areaRectangulo(x, y);
+
+    print("---");
+
+
+    cuadrado(x);
+    cuadrado(y);
+
+    print("=== FIN DE CÁLCULOS ===");
+} ];
 
 main {
-  a = 20;
-  b = 4;
-  c = 8;
-  d = 2;
+    print("🚀 Test de Funciones Anidadas");
+    print("=============================");
+
+    base = 4;
+    exponente = 3;
+
+    print("Base:", base);
+    print("Exponente:", exponente);
 
 
-  resultado1 = a / b;
-  print("Test 1 - División:");
-  print("20 / 4 =");
-  print(resultado1);
+    calculos(base, exponente);
 
-
-  resultado2 = (a + b) * c - d;
-  print("Test 2 - Precedencia:");
-  print("20 + 4 * 8 - 2 =");
-  print(resultado2);
-
-  resultado3 = a * d + c / b;
-  print("Test 3 - Multiplicación y división:");
-  print("20 * 2 + 8 / 4 =");
-  print(resultado3);
-
-  resultado4 = c / d + a / b * c;
-  print("Test 4 - Divisiones exactas:");
-  print("8 / 2 + 20 / 4 * 8 =");
-  print(resultado4);
-
-  final = resultado1 + resultado2 + resultado3 + resultado4;
-  print("Suma de todos los resultados:");
-  print(final);
-
-  print("=== RESULTADOS ESPERADOS ===");
-  print("Test 1: 5");
-  print("Test 2: 50");
-  print("Test 3: 42");
-  print("Test 4: 44");
-  print("Final: 141");
+    print("=============================");
+    print("✅ Test completado");
 }
 end
