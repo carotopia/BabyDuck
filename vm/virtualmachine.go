@@ -37,11 +37,17 @@ func NewVirtualMachine(debug bool) *VirtualMachine {
 // LoadQuadruples carga los cuádruplos en la máquina virtual
 func (vm *VirtualMachine) LoadQuadruples(quads []Quadruple) {
 	vm.quadruples = quads
+	if vm.debug {
+		fmt.Printf("VM: Cargados %d cuádruplos\n", len(quads))
+	}
 }
 
 // LoadConstants carga la tabla de constantes
 func (vm *VirtualMachine) LoadConstants(constants map[int]interface{}) {
 	vm.constants = constants
+	if vm.debug {
+		fmt.Printf("VM: Cargadas %d constantes\n", len(constants))
+	}
 }
 
 // getValue obtiene el valor de un operando (puede ser dirección de memoria o constante)
@@ -52,23 +58,47 @@ func (vm *VirtualMachine) getValue(operand interface{}) interface{} {
 
 	switch v := operand.(type) {
 	case int:
-		// Si es una dirección de memoria
-		if val, exists := vm.memory[v]; exists {
-			return val
-		}
-		// Si es una constante
+		// Primero verificar si es una constante
 		if val, exists := vm.constants[v]; exists {
+			if vm.debug {
+				fmt.Printf("    Obteniendo constante[%d] = %v\n", v, val)
+			}
 			return val
 		}
-		// Si no existe, devolver el valor directo
+		// Luego verificar si es una dirección de memoria
+		if val, exists := vm.memory[v]; exists {
+			if vm.debug {
+				fmt.Printf("    Obteniendo memoria[%d] = %v\n", v, val)
+			}
+			return val
+		}
+		// Si no existe en ningún lado, devolver el valor directo
+		if vm.debug {
+			fmt.Printf("    Usando valor directo: %d\n", v)
+		}
 		return v
 	case string:
 		// Si es una cadena literal, remover comillas si las tiene
 		if strings.HasPrefix(v, "\"") && strings.HasSuffix(v, "\"") {
-			return v[1 : len(v)-1]
+			cleaned := v[1 : len(v)-1]
+			if vm.debug {
+				fmt.Printf("    String literal: %s -> %s\n", v, cleaned)
+			}
+			return cleaned
+		}
+		if vm.debug {
+			fmt.Printf("    String value: %s\n", v)
+		}
+		return v
+	case float64:
+		if vm.debug {
+			fmt.Printf("    Float value: %f\n", v)
 		}
 		return v
 	default:
+		if vm.debug {
+			fmt.Printf("    Other value (%T): %v\n", v, v)
+		}
 		return v
 	}
 }
@@ -77,6 +107,11 @@ func (vm *VirtualMachine) getValue(operand interface{}) interface{} {
 func (vm *VirtualMachine) setValue(address interface{}, value interface{}) {
 	if addr, ok := address.(int); ok {
 		vm.memory[addr] = value
+		if vm.debug {
+			fmt.Printf("    Asignando memoria[%d] = %v\n", addr, value)
+		}
+	} else if vm.debug {
+		fmt.Printf("    ⚠️  Dirección inválida para asignación: %v (%T)\n", address, address)
 	}
 }
 
@@ -92,25 +127,69 @@ func (vm *VirtualMachine) toInt(value interface{}) (int, error) {
 			return val, nil
 		}
 		return 0, fmt.Errorf("cannot convert string '%s' to int", v)
+	case bool:
+		if v {
+			return 1, nil
+		}
+		return 0, nil
 	default:
 		return 0, fmt.Errorf("cannot convert %T to int", value)
 	}
 }
 
+// toFloat convierte un valor a float64 si es posible
+func (vm *VirtualMachine) toFloat(value interface{}) (float64, error) {
+	switch v := value.(type) {
+	case float64:
+		return v, nil
+	case int:
+		return float64(v), nil
+	case string:
+		if val, err := strconv.ParseFloat(v, 64); err == nil {
+			return val, nil
+		}
+		return 0, fmt.Errorf("cannot convert string '%s' to float", v)
+	default:
+		return 0, fmt.Errorf("cannot convert %T to float", value)
+	}
+}
+
+// toBool convierte un valor a booleano
+func (vm *VirtualMachine) toBool(value interface{}) bool {
+	switch v := value.(type) {
+	case bool:
+		return v
+	case int:
+		return v != 0
+	case float64:
+		return v != 0.0
+	case string:
+		return v != "" && v != "false" && v != "0"
+	default:
+		return false
+	}
+}
+
 // Execute ejecuta los cuádruplos
 func (vm *VirtualMachine) Execute() error {
+	if len(vm.quadruples) == 0 {
+		fmt.Println("⚠️  No hay cuádruplos para ejecutar")
+		return nil
+	}
+
 	fmt.Println("\n" + strings.Repeat("=", 60))
 	fmt.Println("🚀 EJECUTANDO CON MÁQUINA VIRTUAL")
 	fmt.Println(strings.Repeat("=", 60))
 
-	// Preprocesar cuádruplos para arreglar orden incorrecto del compilador
-	vm.preprocessQuadruples()
-
 	for vm.pc < len(vm.quadruples) {
+		if vm.pc < 0 || vm.pc >= len(vm.quadruples) {
+			return fmt.Errorf("PC fuera de rango: %d (máximo: %d)", vm.pc, len(vm.quadruples)-1)
+		}
+
 		quad := vm.quadruples[vm.pc]
 
 		if vm.debug {
-			fmt.Printf("PC: %d - Ejecutando: %s %v %v %v\n",
+			fmt.Printf("\nPC: %d - Ejecutando: %s %v %v %v\n",
 				vm.pc, quad.Operator, quad.LeftOperand, quad.RightOperand, quad.Result)
 		}
 
@@ -122,94 +201,8 @@ func (vm *VirtualMachine) Execute() error {
 		vm.pc++
 	}
 
+	fmt.Println("\n✅ Ejecución completada exitosamente.")
 	return nil
-}
-
-// preprocessQuadruples arregla el orden incorrecto de los cuádruplos del compilador
-func (vm *VirtualMachine) preprocessQuadruples() {
-	newQuads := make([]Quadruple, 0, len(vm.quadruples))
-
-	for i := 0; i < len(vm.quadruples); i++ {
-		quad := vm.quadruples[i]
-
-		// Detectar patrón incorrecto de if/else
-		if quad.Operator == ">" || quad.Operator == "<" || quad.Operator == "==" || quad.Operator == "!=" {
-			// Buscar si hay un GOTOF mal ubicado después
-			gotofIndex := -1
-			for j := i + 1; j < len(vm.quadruples) && j < i+10; j++ {
-				if vm.quadruples[j].Operator == "GOTOF" {
-					gotofIndex = j
-					break
-				}
-			}
-
-			if gotofIndex != -1 {
-				// Patrón detectado: comparación seguida de prints y GOTOF al final
-				// Reordenar para que funcione correctamente
-
-				// 1. Añadir la comparación
-				newQuads = append(newQuads, quad)
-
-				// 2. Añadir GOTOF inmediatamente después de la comparación
-				gotofQuad := vm.quadruples[gotofIndex]
-				// Calcular la dirección correcta para saltar al else
-				elseIndex := -1
-				eeeIndex := -1
-
-				// Buscar EEE y la instrucción después
-				for j := i + 1; j < gotofIndex; j++ {
-					if vm.quadruples[j].Operator == "EEE" {
-						eeeIndex = j
-						elseIndex = j + 1
-						break
-					}
-				}
-
-				if elseIndex != -1 {
-					// Crear GOTOF que salte al else
-					fixedGotof := Quadruple{
-						Operator:     "GOTOF",
-						LeftOperand:  gotofQuad.LeftOperand,
-						RightOperand: gotofQuad.RightOperand,
-						Result:       len(newQuads) + 2, // Saltar después del if
-					}
-					newQuads = append(newQuads, fixedGotof)
-
-					// 3. Añadir solo el print del if (sin el else)
-					for j := i + 1; j < eeeIndex; j++ {
-						if vm.quadruples[j].Operator != "EEE" {
-							newQuads = append(newQuads, vm.quadruples[j])
-						}
-					}
-
-					// 4. Añadir el else
-					if elseIndex < len(vm.quadruples) {
-						newQuads = append(newQuads, vm.quadruples[elseIndex])
-					}
-
-					// Saltar todos los cuádruplos que ya procesamos
-					i = gotofIndex
-					continue
-				}
-			}
-		}
-
-		// Si no es un patrón de if/else, añadir normalmente
-		if quad.Operator != "GOTOF" || (quad.Result != nil && quad.Result != "<nil>") {
-			newQuads = append(newQuads, quad)
-		}
-	}
-
-	// Actualizar los cuádruplos
-	vm.quadruples = newQuads
-
-	if vm.debug {
-		fmt.Println("=== CUÁDRUPLOS DESPUÉS DEL PREPROCESAMIENTO ===")
-		for i, quad := range vm.quadruples {
-			fmt.Printf("%d: %s %v %v %v\n", i, quad.Operator, quad.LeftOperand, quad.RightOperand, quad.Result)
-		}
-		fmt.Println("===========================================")
-	}
 }
 
 // executeQuadruple ejecuta un cuádruple individual
@@ -219,26 +212,27 @@ func (vm *VirtualMachine) executeQuadruple(quad Quadruple) error {
 		// Asignación
 		value := vm.getValue(quad.LeftOperand)
 		vm.setValue(quad.Result, value)
-		if vm.debug {
-			fmt.Printf("  Asignación: %v -> memoria[%v] = %v\n", quad.LeftOperand, quad.Result, value)
-		}
 
 	case "+":
 		// Suma
 		left := vm.getValue(quad.LeftOperand)
 		right := vm.getValue(quad.RightOperand)
 
-		leftInt, err1 := vm.toInt(left)
-		rightInt, err2 := vm.toInt(right)
+		leftNum, err1 := vm.toInt(left)
+		rightNum, err2 := vm.toInt(right)
 
 		if err1 != nil || err2 != nil {
-			return fmt.Errorf("error en suma: %v + %v", left, right)
-		}
-
-		result := leftInt + rightInt
-		vm.setValue(quad.Result, result)
-		if vm.debug {
-			fmt.Printf("  Suma: %d + %d = %d -> memoria[%v]\n", leftInt, rightInt, result, quad.Result)
+			// Intentar como float
+			leftFloat, ferr1 := vm.toFloat(left)
+			rightFloat, ferr2 := vm.toFloat(right)
+			if ferr1 != nil || ferr2 != nil {
+				return fmt.Errorf("error en suma: %v + %v", left, right)
+			}
+			result := leftFloat + rightFloat
+			vm.setValue(quad.Result, result)
+		} else {
+			result := leftNum + rightNum
+			vm.setValue(quad.Result, result)
 		}
 
 	case "-":
@@ -246,17 +240,20 @@ func (vm *VirtualMachine) executeQuadruple(quad Quadruple) error {
 		left := vm.getValue(quad.LeftOperand)
 		right := vm.getValue(quad.RightOperand)
 
-		leftInt, err1 := vm.toInt(left)
-		rightInt, err2 := vm.toInt(right)
+		leftNum, err1 := vm.toInt(left)
+		rightNum, err2 := vm.toInt(right)
 
 		if err1 != nil || err2 != nil {
-			return fmt.Errorf("error en resta: %v - %v", left, right)
-		}
-
-		result := leftInt - rightInt
-		vm.setValue(quad.Result, result)
-		if vm.debug {
-			fmt.Printf("  Resta: %d - %d = %d -> memoria[%v]\n", leftInt, rightInt, result, quad.Result)
+			leftFloat, ferr1 := vm.toFloat(left)
+			rightFloat, ferr2 := vm.toFloat(right)
+			if ferr1 != nil || ferr2 != nil {
+				return fmt.Errorf("error en resta: %v - %v", left, right)
+			}
+			result := leftFloat - rightFloat
+			vm.setValue(quad.Result, result)
+		} else {
+			result := leftNum - rightNum
+			vm.setValue(quad.Result, result)
 		}
 
 	case "*":
@@ -264,17 +261,20 @@ func (vm *VirtualMachine) executeQuadruple(quad Quadruple) error {
 		left := vm.getValue(quad.LeftOperand)
 		right := vm.getValue(quad.RightOperand)
 
-		leftInt, err1 := vm.toInt(left)
-		rightInt, err2 := vm.toInt(right)
+		leftNum, err1 := vm.toInt(left)
+		rightNum, err2 := vm.toInt(right)
 
 		if err1 != nil || err2 != nil {
-			return fmt.Errorf("error en multiplicación: %v * %v", left, right)
-		}
-
-		result := leftInt * rightInt
-		vm.setValue(quad.Result, result)
-		if vm.debug {
-			fmt.Printf("  Multiplicación: %d * %d = %d -> memoria[%v]\n", leftInt, rightInt, result, quad.Result)
+			leftFloat, ferr1 := vm.toFloat(left)
+			rightFloat, ferr2 := vm.toFloat(right)
+			if ferr1 != nil || ferr2 != nil {
+				return fmt.Errorf("error en multiplicación: %v * %v", left, right)
+			}
+			result := leftFloat * rightFloat
+			vm.setValue(quad.Result, result)
+		} else {
+			result := leftNum * rightNum
+			vm.setValue(quad.Result, result)
 		}
 
 	case "/":
@@ -282,80 +282,143 @@ func (vm *VirtualMachine) executeQuadruple(quad Quadruple) error {
 		left := vm.getValue(quad.LeftOperand)
 		right := vm.getValue(quad.RightOperand)
 
-		leftInt, err1 := vm.toInt(left)
-		rightInt, err2 := vm.toInt(right)
+		// Siempre usar float para división
+		leftFloat, err1 := vm.toFloat(left)
+		rightFloat, err2 := vm.toFloat(right)
 
 		if err1 != nil || err2 != nil {
 			return fmt.Errorf("error en división: %v / %v", left, right)
 		}
 
-		if rightInt == 0 {
+		if rightFloat == 0 {
 			return fmt.Errorf("error: división por cero")
 		}
 
-		result := leftInt / rightInt
+		result := leftFloat / rightFloat
 		vm.setValue(quad.Result, result)
-		if vm.debug {
-			fmt.Printf("  División: %d / %d = %d -> memoria[%v]\n", leftInt, rightInt, result, quad.Result)
+
+	case "print", "PRINT":
+		// Imprimir - buscar valor en todos los operandos posibles
+		var value interface{}
+
+		if quad.LeftOperand != nil {
+			value = vm.getValue(quad.LeftOperand)
+		} else if quad.RightOperand != nil {
+			value = vm.getValue(quad.RightOperand)
+		} else if quad.Result != nil {
+			value = vm.getValue(quad.Result)
 		}
 
-	case "print":
-		// Imprimir
-		value := vm.getValue(quad.LeftOperand)
-		fmt.Printf(">>> %v\n", value)
+		if value != nil {
+			fmt.Printf(">>> %v\n", value)
+		} else {
+			fmt.Println(">>> <valor nulo>")
+		}
 
 	case ">":
 		// Mayor que
 		left := vm.getValue(quad.LeftOperand)
 		right := vm.getValue(quad.RightOperand)
 
-		leftInt, err1 := vm.toInt(left)
-		rightInt, err2 := vm.toInt(right)
+		leftNum, err1 := vm.toFloat(left)
+		rightNum, err2 := vm.toFloat(right)
 
 		if err1 != nil || err2 != nil {
 			return fmt.Errorf("error en comparación: %v > %v", left, right)
 		}
 
-		result := leftInt > rightInt
+		result := leftNum > rightNum
 		vm.setValue(quad.Result, result)
-		if vm.debug {
-			fmt.Printf("  Comparación: %d > %d = %t -> memoria[%v]\n", leftInt, rightInt, result, quad.Result)
-		}
 
 	case "<":
 		// Menor que
 		left := vm.getValue(quad.LeftOperand)
 		right := vm.getValue(quad.RightOperand)
 
-		leftInt, err1 := vm.toInt(left)
-		rightInt, err2 := vm.toInt(right)
+		leftNum, err1 := vm.toFloat(left)
+		rightNum, err2 := vm.toFloat(right)
 
 		if err1 != nil || err2 != nil {
 			return fmt.Errorf("error en comparación: %v < %v", left, right)
 		}
 
-		result := leftInt < rightInt
+		result := leftNum < rightNum
 		vm.setValue(quad.Result, result)
-		if vm.debug {
-			fmt.Printf("  Comparación: %d < %d = %t -> memoria[%v]\n", leftInt, rightInt, result, quad.Result)
+
+	case ">=":
+		// Mayor o igual que
+		left := vm.getValue(quad.LeftOperand)
+		right := vm.getValue(quad.RightOperand)
+
+		leftNum, err1 := vm.toFloat(left)
+		rightNum, err2 := vm.toFloat(right)
+
+		if err1 != nil || err2 != nil {
+			return fmt.Errorf("error en comparación: %v >= %v", left, right)
+		}
+
+		result := leftNum >= rightNum
+		vm.setValue(quad.Result, result)
+
+	case "<=":
+		// Menor o igual que
+		left := vm.getValue(quad.LeftOperand)
+		right := vm.getValue(quad.RightOperand)
+
+		leftNum, err1 := vm.toFloat(left)
+		rightNum, err2 := vm.toFloat(right)
+
+		if err1 != nil || err2 != nil {
+			return fmt.Errorf("error en comparación: %v <= %v", left, right)
+		}
+
+		result := leftNum <= rightNum
+		vm.setValue(quad.Result, result)
+
+	case "==":
+		// Igual que
+		left := vm.getValue(quad.LeftOperand)
+		right := vm.getValue(quad.RightOperand)
+
+		// Intentar comparación numérica primero
+		leftNum, err1 := vm.toFloat(left)
+		rightNum, err2 := vm.toFloat(right)
+
+		if err1 == nil && err2 == nil {
+			result := leftNum == rightNum
+			vm.setValue(quad.Result, result)
+		} else {
+			// Comparación directa
+			result := left == right
+			vm.setValue(quad.Result, result)
+		}
+
+	case "!=":
+		// Diferente
+		left := vm.getValue(quad.LeftOperand)
+		right := vm.getValue(quad.RightOperand)
+
+		leftNum, err1 := vm.toFloat(left)
+		rightNum, err2 := vm.toFloat(right)
+
+		if err1 == nil && err2 == nil {
+			result := leftNum != rightNum
+			vm.setValue(quad.Result, result)
+		} else {
+			result := left != right
+			vm.setValue(quad.Result, result)
 		}
 
 	case "GOTOF":
 		// Salto condicional (Go To False)
 		condition := vm.getValue(quad.LeftOperand)
+		conditionBool := vm.toBool(condition)
+
 		if vm.debug {
-			fmt.Printf("  GOTOF - Condición: %v", condition)
+			fmt.Printf("  GOTOF - Condición: %v (%t)", condition, conditionBool)
 		}
 
-		// Verificar si tenemos una dirección de salto válida
-		if quad.Result == nil || quad.Result == "<nil>" {
-			if vm.debug {
-				fmt.Printf(" (sin dirección de salto válida - ignorando)\n")
-			}
-			return nil
-		}
-
-		if condition == false {
+		if !conditionBool { // Si la condición es FALSA
 			if jumpAddr, ok := quad.Result.(int); ok {
 				vm.pc = jumpAddr - 1 // -1 porque se incrementará al final del loop
 				if vm.debug {
@@ -377,21 +440,15 @@ func (vm *VirtualMachine) executeQuadruple(quad Quadruple) error {
 			}
 		}
 
-	case "FUNC", "ENDFUNC", "PARAM", "ERA", "PARAMETER", "GOSUB":
-		// Operaciones de función - implementar más tarde
+	case "FUNC", "ENDFUNC", "PARAM", "ERA", "PARAMETER", "GOSUB", "RET":
+		// Operaciones de función - para implementar más tarde
 		if vm.debug {
 			fmt.Printf("  Operación de función (no implementada): %s\n", quad.Operator)
 		}
 
-	case "EEE":
-		// Operación especial - por ahora ignorar
-		if vm.debug {
-			fmt.Printf("  Marcador EEE (fin de bloque)\n")
-		}
-
 	default:
 		if vm.debug {
-			fmt.Printf("  Operación no implementada: %s\n", quad.Operator)
+			fmt.Printf("  ⚠️  Operación no reconocida: %s\n", quad.Operator)
 		}
 	}
 
@@ -400,14 +457,24 @@ func (vm *VirtualMachine) executeQuadruple(quad Quadruple) error {
 
 // PrintMemoryState imprime el estado actual de la memoria
 func (vm *VirtualMachine) PrintMemoryState() {
-	fmt.Println("\n=== ESTADO FINAL DE MEMORIA ===")
+	fmt.Println("\n" + strings.Repeat("=", 60))
+	fmt.Println("ESTADO FINAL DE MEMORIA")
+	fmt.Println(strings.Repeat("=", 60))
+
 	if len(vm.memory) == 0 {
 		fmt.Println("Memoria vacía")
-		return
+	} else {
+		for addr, value := range vm.memory {
+			fmt.Printf("Memoria[%d] = %v (%T)\n", addr, value, value)
+		}
 	}
 
-	for addr, value := range vm.memory {
-		fmt.Printf("Memoria[%d] = %v\n", addr, value)
+	if len(vm.constants) > 0 {
+		fmt.Println("\nConstantes:")
+		for addr, value := range vm.constants {
+			fmt.Printf("Constante[%d] = %v (%T)\n", addr, value, value)
+		}
 	}
-	fmt.Println("==============================")
+
+	fmt.Println(strings.Repeat("=", 60))
 }

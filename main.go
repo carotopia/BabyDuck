@@ -4,6 +4,7 @@ import (
 	"BabyDuckCompiler/builder"
 	"BabyDuckCompiler/quads"
 	"BabyDuckCompiler/symbols"
+	"BabyDuckCompiler/vm" // ← AGREGAR ESTA IMPORTACIÓN
 	"fmt"
 	"os"
 	"strings"
@@ -108,6 +109,62 @@ func printErrors(errors []string) {
 	fmt.Println(strings.Repeat("=", 60))
 }
 
+// convertToVMQuadruples convierte cuádruplos del compilador a formato de VM
+func convertToVMQuadruples(compilerQuads []quads.Quadruple) []vm.Quadruple {
+	vmQuads := make([]vm.Quadruple, len(compilerQuads))
+
+	for i, quad := range compilerQuads {
+		vmQuads[i] = vm.Quadruple{
+			Operator:     quad.Operator,
+			LeftOperand:  quad.LeftOperand,
+			RightOperand: quad.RightOperand,
+			Result:       quad.Result,
+		}
+	}
+
+	return vmQuads
+}
+
+// executeProgram ejecuta el programa usando la máquina virtual
+func executeProgram(typedQuadruples []quads.Quadruple, parser *builder.PureVisitorParser, debug bool) error {
+	// Crear la máquina virtual
+	virtualMachine := vm.NewVirtualMachine(debug)
+
+	// Convertir cuádruplos al formato de la VM
+	vmQuadruples := convertToVMQuadruples(typedQuadruples)
+
+	// Cargar cuádruplos en la VM
+	virtualMachine.LoadQuadruples(vmQuadruples)
+
+	// Obtener y cargar tabla de constantes
+	constantTable := parser.GetConstantTable()
+	if constantTable != nil {
+		// Usar el nuevo método GetConstants() de la tabla de constantes
+		constants := constantTable.GetConstants()
+		virtualMachine.LoadConstants(constants)
+
+		if debug {
+			fmt.Printf("Cargadas %d constantes en la VM\n", len(constants))
+		}
+	} else {
+		// Cargar mapa vacío si no hay tabla de constantes
+		virtualMachine.LoadConstants(make(map[int]interface{}))
+	}
+
+	// Ejecutar el programa
+	err := virtualMachine.Execute()
+	if err != nil {
+		return err
+	}
+
+	// Mostrar estado final de memoria si está en modo debug
+	if debug {
+		virtualMachine.PrintMemoryState()
+	}
+
+	return nil
+}
+
 func main() {
 	// Check if a source file was provided
 	if len(os.Args) < 2 {
@@ -145,17 +202,16 @@ func main() {
 	}
 	fmt.Println(strings.Repeat("=", 60))
 
-	// ========== CORRECCIÓN: Usar el parser final ==========
+	// Usar el parser final
 	parser := builder.NewPureVisitorParser(string(sourceCode), debug)
 
-	// ========== CORRECCIÓN 2: Nombre correcto de variable ==========
+	// Parsear el código
 	symbolTable, errors := parser.Parse()
 
 	// Print symbol table
 	printSymbolTable(symbolTable)
 
-	// ========== CORRECCIÓN 3: Obtener cuádruplos del parser puro ==========
-	// El nuevo parser ya no tiene DirectoryBuilder, sino que accede directo
+	// Obtener cuádruplos del parser
 	quadruples := parser.GetQuadruples()
 
 	// Convertir []interface{} a []quads.Quadruple
@@ -169,13 +225,17 @@ func main() {
 	// Print quadruples
 	printQuadruples(typedQuadruples)
 
-	// ========== CORRECCIÓN 4: Obtener tabla de constantes del parser puro ==========
+	// Obtener tabla de constantes del parser
 	constantTable := parser.GetConstantTable()
-	if constantTable != nil {
+	if constantTable != nil && constantTable.Size() > 0 {
 		fmt.Println("\n" + strings.Repeat("=", 60))
 		fmt.Println("CONSTANT TABLE")
 		fmt.Println(strings.Repeat("=", 60))
-		constantTable.Print()
+		if debug {
+			constantTable.PrintDetailed()
+		} else {
+			constantTable.Print()
+		}
 	}
 
 	// Print compilation errors
@@ -192,30 +252,18 @@ func main() {
 	} else {
 		fmt.Println("✅ Compilation successful! No errors detected.")
 
-		// ========== CORRECCIÓN 5: Ejecutar VM con los nuevos datos ==========
+		// Ejecutar con máquina virtual si hay cuádruplos
 		if len(typedQuadruples) > 0 {
 			if autoExecute {
 				fmt.Println("\n🚀 Ejecutando automáticamente...")
-				fmt.Println(strings.Repeat("=", 60))
-				fmt.Println("🚀 EJECUTANDO CON MÁQUINA VIRTUAL")
-				fmt.Println(strings.Repeat("=", 60))
 
-				// ========== NOTA: Aquí necesitas adaptar tu VM ==========
-				// Tu VM probablemente espere un DirectoryBuilder, pero ahora tenemos parser puro
-				// Opción 1: Modificar VM para aceptar parser puro
-				// Opción 2: Crear adaptador
-
-				// Por ahora, simulamos la ejecución:
-				fmt.Println(">>> Simulando ejecución del programa...")
-				fmt.Println(">>> (VM necesita ser adaptada para el nuevo parser)")
-
-				// Descomenta y adapta cuando tengas la VM lista:
-				// err := vm.ExecuteProgram(typedQuadruples, parser, debug)
-				// if err != nil {
-				//     fmt.Printf("❌ Error durante la ejecución: %v\n", err)
-				// } else {
-				//     fmt.Println("✅ Ejecución completada exitosamente.")
-				// }
+				err := executeProgram(typedQuadruples, parser, debug)
+				if err != nil {
+					fmt.Printf("❌ Error durante la ejecución: %v\n", err)
+					os.Exit(1)
+				} else {
+					fmt.Println("✅ Ejecución completada exitosamente.")
+				}
 
 			} else {
 				fmt.Print("\n🚀 ¿Ejecutar el programa? (y/n): ")
@@ -223,22 +271,17 @@ func main() {
 				fmt.Scanln(&response)
 
 				if response == "y" || response == "Y" || response == "yes" || response == "" {
-					fmt.Println(strings.Repeat("=", 60))
-					fmt.Println("🚀 EJECUTANDO CON MÁQUINA VIRTUAL")
-					fmt.Println(strings.Repeat("=", 60))
-
-					fmt.Println(">>> Simulando ejecución del programa...")
-					fmt.Println(">>> (VM necesita ser adaptada para el nuevo parser)")
-
-					// Descomenta y adapta cuando tengas la VM lista:
-					// err := vm.ExecuteProgram(typedQuadruples, parser, debug)
-					// if err != nil {
-					//     fmt.Printf("❌ Error durante la ejecución: %v\n", err)
-					// } else {
-					//     fmt.Println("✅ Ejecución completada exitosamente.")
-					// }
+					err := executeProgram(typedQuadruples, parser, debug)
+					if err != nil {
+						fmt.Printf("❌ Error durante la ejecución: %v\n", err)
+						os.Exit(1)
+					} else {
+						fmt.Println("✅ Ejecución completada exitosamente.")
+					}
 				}
 			}
+		} else {
+			fmt.Println("⚠️  No hay cuádruplos para ejecutar.")
 		}
 	}
 

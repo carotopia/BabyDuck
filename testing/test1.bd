@@ -14,7 +14,7 @@ main {
     print("i es menor o igual a 3");
   };
 
-  while (i <= 3) do {
+  while (i < 3) do {
     print("Iteracion:");
     print(i);
     i = i + 1;
