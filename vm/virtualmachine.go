@@ -2,6 +2,7 @@ package vm
 
 import (
 	"fmt"
+	"io"
 	"strconv"
 	"strings"
 )
@@ -14,6 +15,14 @@ type Quadruple struct {
 	Result       interface{}
 }
 
+// CallFrame representa un contexto de llamada a función
+type CallFrame struct {
+	FunctionName  string              // Nombre de la función
+	ReturnAddress int                 // Dirección de retorno
+	LocalMemory   map[int]interface{} // Memoria local de la función
+	Parameters    []interface{}       // Parámetros de la función
+}
+
 // VirtualMachine representa la máquina virtual
 type VirtualMachine struct {
 	quadruples []Quadruple
@@ -22,20 +31,16 @@ type VirtualMachine struct {
 	pc         int                 // Program Counter
 	debug      bool                // Modo debug
 
-	// Stack para manejo de funciones (simplificado)
+	// Stack para manejo de funciones
 	callStack  []CallFrame   // Stack de contextos de llamada
 	paramStack []interface{} // Stack de parámetros temporales
 
 	// Información de funciones
 	functionTable map[string]int // nombre -> dirección de inicio
-}
 
-// CallFrame representa un contexto de llamada a función
-type CallFrame struct {
-	FunctionName  string              // Nombre de la función
-	ReturnAddress int                 // Dirección de retorno
-	LocalMemory   map[int]interface{} // Memoria local de la función
-	Parameters    []interface{}       // Parámetros de la función
+	// Para capturar output
+	outputWriter io.Writer // Writer para capturar output
+	debugWriter  io.Writer // Writer para debug output
 }
 
 // NewVirtualMachine crea una nueva instancia de la máquina virtual
@@ -49,6 +54,66 @@ func NewVirtualMachine(debug bool) *VirtualMachine {
 		callStack:     make([]CallFrame, 0),
 		paramStack:    make([]interface{}, 0),
 		functionTable: make(map[string]int),
+		outputWriter:  nil,
+		debugWriter:   nil,
+	}
+}
+
+// SetOutputWriter configura el writer para capturar el output del programa
+func (vm *VirtualMachine) SetOutputWriter(writer io.Writer) {
+	vm.outputWriter = writer
+}
+
+// SetDebugWriter configura el writer para el debug
+func (vm *VirtualMachine) SetDebugWriter(writer io.Writer) {
+	vm.debugWriter = writer
+}
+
+// print wraps the printing logic to use the configured writer
+func (vm *VirtualMachine) print(args ...interface{}) {
+	if vm.outputWriter != nil {
+		fmt.Fprint(vm.outputWriter, args...)
+	} else {
+		fmt.Print(args...)
+	}
+}
+
+// println wraps the printing logic to use the configured writer
+func (vm *VirtualMachine) println(args ...interface{}) {
+	if vm.outputWriter != nil {
+		fmt.Fprintln(vm.outputWriter, args...)
+	} else {
+		fmt.Println(args...)
+	}
+}
+
+// debugPrint prints debug information
+func (vm *VirtualMachine) debugPrint(args ...interface{}) {
+	if !vm.debug {
+		return
+	}
+
+	if vm.debugWriter != nil {
+		fmt.Fprint(vm.debugWriter, args...)
+	} else if vm.outputWriter != nil {
+		fmt.Fprint(vm.outputWriter, args...)
+	} else {
+		fmt.Print(args...)
+	}
+}
+
+// debugPrintln prints debug information with newline
+func (vm *VirtualMachine) debugPrintln(args ...interface{}) {
+	if !vm.debug {
+		return
+	}
+
+	if vm.debugWriter != nil {
+		fmt.Fprintln(vm.debugWriter, args...)
+	} else if vm.outputWriter != nil {
+		fmt.Fprintln(vm.outputWriter, args...)
+	} else {
+		fmt.Println(args...)
 	}
 }
 
@@ -60,9 +125,9 @@ func (vm *VirtualMachine) LoadQuadruples(quads []Quadruple) {
 	vm.preprocessFunctions()
 
 	if vm.debug {
-		fmt.Printf("VM: Cargados %d cuádruplos\n", len(quads))
+		vm.debugPrintln("VM: Cargados", len(quads), "cuádruplos")
 		if len(vm.functionTable) > 0 {
-			fmt.Printf("VM: Encontradas %d funciones\n", len(vm.functionTable))
+			vm.debugPrintln("VM: Encontradas", len(vm.functionTable), "funciones")
 		}
 	}
 }
@@ -74,7 +139,7 @@ func (vm *VirtualMachine) preprocessFunctions() {
 			if funcName, ok := quad.LeftOperand.(string); ok {
 				vm.functionTable[funcName] = i
 				if vm.debug {
-					fmt.Printf("VM: Registrando función '%s' en PC: %d\n", funcName, i)
+					vm.debugPrintln("VM: Registrando función", funcName, "en PC:", i)
 				}
 			}
 		}
@@ -85,7 +150,7 @@ func (vm *VirtualMachine) preprocessFunctions() {
 func (vm *VirtualMachine) LoadConstants(constants map[int]interface{}) {
 	vm.constants = constants
 	if vm.debug {
-		fmt.Printf("VM: Cargadas %d constantes\n", len(constants))
+		vm.debugPrintln("VM: Cargadas", len(constants), "constantes")
 	}
 }
 
@@ -100,7 +165,7 @@ func (vm *VirtualMachine) getValue(operand interface{}) interface{} {
 		// Primero verificar si es una constante
 		if val, exists := vm.constants[v]; exists {
 			if vm.debug {
-				fmt.Printf("    Obteniendo constante[%d] = %v\n", v, val)
+				vm.debugPrint("    Obteniendo constante[", v, "] = ", val, "\n")
 			}
 			return val
 		}
@@ -110,7 +175,7 @@ func (vm *VirtualMachine) getValue(operand interface{}) interface{} {
 			currentFrame := &vm.callStack[len(vm.callStack)-1]
 			if val, exists := currentFrame.LocalMemory[v]; exists {
 				if vm.debug {
-					fmt.Printf("    Obteniendo memoria local[%d] = %v (función: %s)\n", v, val, currentFrame.FunctionName)
+					vm.debugPrint("    Obteniendo memoria local[", v, "] = ", val, " (función: ", currentFrame.FunctionName, ")\n")
 				}
 				return val
 			}
@@ -119,14 +184,14 @@ func (vm *VirtualMachine) getValue(operand interface{}) interface{} {
 		// Verificar memoria global
 		if val, exists := vm.memory[v]; exists {
 			if vm.debug {
-				fmt.Printf("    Obteniendo memoria global[%d] = %v\n", v, val)
+				vm.debugPrint("    Obteniendo memoria global[", v, "] = ", val, "\n")
 			}
 			return val
 		}
 
 		// Si no existe en ningún lado, devolver el valor directo
 		if vm.debug {
-			fmt.Printf("    Usando valor directo: %d\n", v)
+			vm.debugPrint("    Usando valor directo: ", v, "\n")
 		}
 		return v
 	case string:
@@ -134,22 +199,22 @@ func (vm *VirtualMachine) getValue(operand interface{}) interface{} {
 		if strings.HasPrefix(v, "\"") && strings.HasSuffix(v, "\"") {
 			cleaned := v[1 : len(v)-1]
 			if vm.debug {
-				fmt.Printf("    String literal: %s -> %s\n", v, cleaned)
+				vm.debugPrint("    String literal: ", v, " -> ", cleaned, "\n")
 			}
 			return cleaned
 		}
 		if vm.debug {
-			fmt.Printf("    String value: %s\n", v)
+			vm.debugPrint("    String value: ", v, "\n")
 		}
 		return v
 	case float64:
 		if vm.debug {
-			fmt.Printf("    Float value: %f\n", v)
+			vm.debugPrint("    Float value: ", v, "\n")
 		}
 		return v
 	default:
 		if vm.debug {
-			fmt.Printf("    Other value (%T): %v\n", v, v)
+			vm.debugPrint("    Other value (", fmt.Sprintf("%T", v), "): ", v, "\n")
 		}
 		return v
 	}
@@ -165,7 +230,7 @@ func (vm *VirtualMachine) setValue(address interface{}, value interface{}) {
 			if addr >= 1000 && addr < 5000 {
 				currentFrame.LocalMemory[addr] = value
 				if vm.debug {
-					fmt.Printf("    Asignando memoria local[%d] = %v (función: %s)\n", addr, value, currentFrame.FunctionName)
+					vm.debugPrint("    Asignando memoria local[", addr, "] = ", value, " (función: ", currentFrame.FunctionName, ")\n")
 				}
 				return
 			}
@@ -174,10 +239,10 @@ func (vm *VirtualMachine) setValue(address interface{}, value interface{}) {
 		// Asignar a memoria global
 		vm.memory[addr] = value
 		if vm.debug {
-			fmt.Printf("    Asignando memoria global[%d] = %v\n", addr, value)
+			vm.debugPrint("    Asignando memoria global[", addr, "] = ", value, "\n")
 		}
 	} else if vm.debug {
-		fmt.Printf("    ⚠️  Dirección inválida para asignación: %v (%T)\n", address, address)
+		vm.debugPrint("    ⚠️  Dirección inválida para asignación: ", address, " (", fmt.Sprintf("%T", address), ")\n")
 	}
 }
 
@@ -239,13 +304,13 @@ func (vm *VirtualMachine) toBool(value interface{}) bool {
 // Execute ejecuta los cuádruplos
 func (vm *VirtualMachine) Execute() error {
 	if len(vm.quadruples) == 0 {
-		fmt.Println("⚠️  No hay cuádruplos para ejecutar")
+		vm.println("⚠️  No hay cuádruplos para ejecutar")
 		return nil
 	}
 
-	fmt.Println("\n" + strings.Repeat("=", 60))
-	fmt.Println("🚀 EJECUTANDO CON MÁQUINA VIRTUAL")
-	fmt.Println(strings.Repeat("=", 60))
+	vm.debugPrintln("\n", strings.Repeat("=", 60))
+	vm.debugPrintln("🚀 EJECUTANDO CON MÁQUINA VIRTUAL")
+	vm.debugPrintln(strings.Repeat("=", 60))
 
 	// Inicializar PC en 0
 	vm.pc = 0
@@ -258,8 +323,7 @@ func (vm *VirtualMachine) Execute() error {
 		quad := vm.quadruples[vm.pc]
 
 		if vm.debug {
-			fmt.Printf("\nPC: %d - Ejecutando: %s %v %v %v\n",
-				vm.pc, quad.Operator, quad.LeftOperand, quad.RightOperand, quad.Result)
+			vm.debugPrintln("\nPC:", vm.pc, "- Ejecutando:", quad.Operator, quad.LeftOperand, quad.RightOperand, quad.Result)
 		}
 
 		err := vm.executeQuadruple(quad)
@@ -270,11 +334,10 @@ func (vm *VirtualMachine) Execute() error {
 		vm.pc++
 	}
 
-	fmt.Println("\n✅ Ejecución completada exitosamente.")
+	vm.debugPrintln("\n✅ Ejecución completada exitosamente.")
 	return nil
 }
 
-// executeQuadruple ejecuta un cuádruple individual
 // executeQuadruple ejecuta un cuádruple individual
 func (vm *VirtualMachine) executeQuadruple(quad Quadruple) error {
 	op := quad.Operator
@@ -286,7 +349,7 @@ func (vm *VirtualMachine) executeQuadruple(quad Quadruple) error {
 			if name, ok := quad.LeftOperand.(string); ok {
 				funcName = name
 			}
-			fmt.Printf("  ERA: Preparando espacio para función '%s'\n", funcName)
+			vm.debugPrintln("  ERA: Preparando espacio para función", funcName)
 		}
 		return nil
 	}
@@ -295,7 +358,7 @@ func (vm *VirtualMachine) executeQuadruple(quad Quadruple) error {
 		value := vm.getValue(quad.LeftOperand)
 		vm.paramStack = append(vm.paramStack, value)
 		if vm.debug {
-			fmt.Printf("  PARAMETER: Guardando parámetro %v (total: %d)\n", value, len(vm.paramStack))
+			vm.debugPrintln("  PARAMETER: Guardando parámetro", value, "(total:", len(vm.paramStack), ")")
 		}
 		return nil
 	}
@@ -304,17 +367,15 @@ func (vm *VirtualMachine) executeQuadruple(quad Quadruple) error {
 		var funcAddr int
 		var funcName string
 
-		// Determinar función a llamar - ADAPTADO para tu formato específico
+		// Determinar función a llamar
 		if name, ok := quad.LeftOperand.(string); ok {
 			funcName = name
-			// Buscar la función en la tabla
 			if addr, exists := vm.functionTable[name]; exists {
 				funcAddr = addr
 			} else {
 				return fmt.Errorf("función '%s' no encontrada", name)
 			}
 		} else if addr, ok := quad.Result.(int); ok {
-			// El Result contiene la dirección de la función
 			funcAddr = addr
 			// Buscar nombre por dirección
 			for name, address := range vm.functionTable {
@@ -328,7 +389,6 @@ func (vm *VirtualMachine) executeQuadruple(quad Quadruple) error {
 			}
 		} else {
 			// Intentar como formato específico de tu compilador
-			// Si LeftOperand es string y Result es int
 			if leftStr, ok := quad.LeftOperand.(string); ok {
 				funcName = leftStr
 				if resultInt, ok := quad.Result.(int); ok {
@@ -342,7 +402,7 @@ func (vm *VirtualMachine) executeQuadruple(quad Quadruple) error {
 		}
 
 		if vm.debug {
-			fmt.Printf("  GOSUB: Intentando llamar función '%s' en PC: %d\n", funcName, funcAddr)
+			vm.debugPrintln("  GOSUB: Intentando llamar función", funcName, "en PC:", funcAddr)
 		}
 
 		// Crear frame de ejecución
@@ -361,7 +421,7 @@ func (vm *VirtualMachine) executeQuadruple(quad Quadruple) error {
 			paramAddr := 1000 + i
 			frame.LocalMemory[paramAddr] = param
 			if vm.debug {
-				fmt.Printf("    Parámetro[%d] = %v -> memoria local[%d]\n", i, param, paramAddr)
+				vm.debugPrint("    Parámetro[", i, "] = ", param, " -> memoria local[", paramAddr, "]\n")
 			}
 		}
 
@@ -374,7 +434,7 @@ func (vm *VirtualMachine) executeQuadruple(quad Quadruple) error {
 		// Saltar a la función
 		vm.pc = funcAddr - 1
 		if vm.debug {
-			fmt.Printf("  GOSUB: Llamando función '%s' en PC: %d\n", funcName, funcAddr)
+			vm.debugPrintln("  GOSUB: Llamando función", funcName, "en PC:", funcAddr)
 		}
 		return nil
 	}
@@ -382,7 +442,7 @@ func (vm *VirtualMachine) executeQuadruple(quad Quadruple) error {
 	if op == "FUNC" {
 		if vm.debug {
 			if funcName, ok := quad.LeftOperand.(string); ok {
-				fmt.Printf("  FUNC: Definición de función '%s'\n", funcName)
+				vm.debugPrintln("  FUNC: Definición de función", funcName)
 			}
 		}
 		return nil
@@ -390,7 +450,7 @@ func (vm *VirtualMachine) executeQuadruple(quad Quadruple) error {
 
 	if op == "PARAM" {
 		if vm.debug {
-			fmt.Printf("  PARAM: Declaración de parámetro (saltando)\n")
+			vm.debugPrintln("  PARAM: Declaración de parámetro (saltando)")
 		}
 		return nil
 	}
@@ -402,11 +462,11 @@ func (vm *VirtualMachine) executeQuadruple(quad Quadruple) error {
 
 			vm.pc = frame.ReturnAddress - 1
 			if vm.debug {
-				fmt.Printf("  ENDFUNC: Retornando de función '%s' a PC: %d\n", frame.FunctionName, frame.ReturnAddress)
+				vm.debugPrintln("  ENDFUNC: Retornando de función", frame.FunctionName, "a PC:", frame.ReturnAddress)
 			}
 		} else {
 			if vm.debug {
-				fmt.Printf("  ENDFUNC: Fin de función principal\n")
+				vm.debugPrintln("  ENDFUNC: Fin de función principal")
 			}
 		}
 		return nil
@@ -423,13 +483,13 @@ func (vm *VirtualMachine) executeQuadruple(quad Quadruple) error {
 					vm.setValue(quad.Result, returnValue)
 				}
 				if vm.debug {
-					fmt.Printf("  RET: Retornando valor %v de función '%s'\n", returnValue, frame.FunctionName)
+					vm.debugPrintln("  RET: Retornando valor", returnValue, "de función", frame.FunctionName)
 				}
 			}
 
 			vm.pc = frame.ReturnAddress - 1
 			if vm.debug {
-				fmt.Printf("  RET: Retornando de función '%s' a PC: %d\n", frame.FunctionName, frame.ReturnAddress)
+				vm.debugPrintln("  RET: Retornando de función", frame.FunctionName, "a PC:", frame.ReturnAddress)
 			}
 		}
 		return nil
@@ -552,16 +612,16 @@ func (vm *VirtualMachine) executeQuadruple(quad Quadruple) error {
 
 		// Imprimir todos los valores
 		if len(values) > 0 {
-			fmt.Print(">>> ")
+			vm.print(">>> ")
 			for i, value := range values {
 				if i > 0 {
-					fmt.Print(" ")
+					vm.print(" ")
 				}
-				fmt.Print(value)
+				vm.print(value)
 			}
-			fmt.Println()
+			vm.println()
 		} else {
-			fmt.Println(">>> <valor nulo>")
+			vm.println(">>> <valor nulo>")
 		}
 
 	case ">":
@@ -595,7 +655,7 @@ func (vm *VirtualMachine) executeQuadruple(quad Quadruple) error {
 		vm.setValue(quad.Result, result)
 
 	case ">=":
-		// Mayor o equal que
+		// Mayor o igual que
 		left := vm.getValue(quad.LeftOperand)
 		right := vm.getValue(quad.RightOperand)
 
@@ -664,19 +724,19 @@ func (vm *VirtualMachine) executeQuadruple(quad Quadruple) error {
 		conditionBool := vm.toBool(condition)
 
 		if vm.debug {
-			fmt.Printf("  GOTOF - Condición: %v (%t)", condition, conditionBool)
+			vm.debugPrint("  GOTOF - Condición: ", condition, " (", conditionBool, ")")
 		}
 
 		if !conditionBool { // Si la condición es FALSA
 			if jumpAddr, ok := quad.Result.(int); ok {
 				vm.pc = jumpAddr - 1 // -1 porque se incrementará al final del loop
 				if vm.debug {
-					fmt.Printf(" -> Saltando a PC: %d\n", jumpAddr)
+					vm.debugPrintln(" -> Saltando a PC:", jumpAddr)
 				}
 			}
 		} else {
 			if vm.debug {
-				fmt.Printf(" -> Continúa secuencial\n")
+				vm.debugPrintln(" -> Continúa secuencial")
 			}
 		}
 
@@ -685,13 +745,13 @@ func (vm *VirtualMachine) executeQuadruple(quad Quadruple) error {
 		if jumpAddr, ok := quad.Result.(int); ok {
 			vm.pc = jumpAddr - 1 // -1 porque se incrementará al final del loop
 			if vm.debug {
-				fmt.Printf("  Salto incondicional a PC: %d\n", jumpAddr)
+				vm.debugPrintln("  Salto incondicional a PC:", jumpAddr)
 			}
 		}
 
 	default:
 		if vm.debug {
-			fmt.Printf("  ⚠️  Operación no reconocida: %s\n", op)
+			vm.debugPrintln("  ⚠️  Operación no reconocida:", op)
 		}
 		return fmt.Errorf("operación no implementada: %s", op)
 	}
@@ -701,60 +761,60 @@ func (vm *VirtualMachine) executeQuadruple(quad Quadruple) error {
 
 // PrintMemoryState imprime el estado actual de la memoria
 func (vm *VirtualMachine) PrintMemoryState() {
-	fmt.Println("\n" + strings.Repeat("=", 60))
-	fmt.Println("ESTADO FINAL DE MEMORIA")
-	fmt.Println(strings.Repeat("=", 60))
+	vm.println("\n", strings.Repeat("=", 60))
+	vm.println("ESTADO FINAL DE MEMORIA")
+	vm.println(strings.Repeat("=", 60))
 
 	// Memoria global
-	fmt.Println("Memoria Global:")
+	vm.println("Memoria Global:")
 	if len(vm.memory) == 0 {
-		fmt.Println("  Memoria global vacía")
+		vm.println("  Memoria global vacía")
 	} else {
 		for addr, value := range vm.memory {
-			fmt.Printf("  Memoria[%d] = %v (%T)\n", addr, value, value)
+			vm.println("  Memoria[", addr, "] = ", value, " (", fmt.Sprintf("%T", value), ")")
 		}
 	}
 
 	// Call stack activo
 	if len(vm.callStack) > 0 {
-		fmt.Printf("\nCall Stack activo (%d frames):\n", len(vm.callStack))
+		vm.println("\nCall Stack activo (", len(vm.callStack), " frames):")
 		for i, frame := range vm.callStack {
-			fmt.Printf("  [%d] Función '%s' -> Retorno: PC %d\n", i, frame.FunctionName, frame.ReturnAddress)
+			vm.println("  [", i, "] Función '", frame.FunctionName, "' -> Retorno: PC ", frame.ReturnAddress)
 			if len(frame.LocalMemory) > 0 {
-				fmt.Printf("      Memoria local:\n")
+				vm.println("      Memoria local:")
 				for addr, value := range frame.LocalMemory {
-					fmt.Printf("        Local[%d] = %v (%T)\n", addr, value, value)
+					vm.println("        Local[", addr, "] = ", value, " (", fmt.Sprintf("%T", value), ")")
 				}
 			}
 			if len(frame.Parameters) > 0 {
-				fmt.Printf("      Parámetros: %v\n", frame.Parameters)
+				vm.println("      Parámetros: ", frame.Parameters)
 			}
 		}
 	}
 
 	// Constantes
 	if len(vm.constants) > 0 {
-		fmt.Println("\nConstantes:")
+		vm.println("\nConstantes:")
 		for addr, value := range vm.constants {
-			fmt.Printf("  Constante[%d] = %v (%T)\n", addr, value, value)
+			vm.println("  Constante[", addr, "] = ", value, " (", fmt.Sprintf("%T", value), ")")
 		}
 	}
 
 	// Información de funciones
 	if len(vm.functionTable) > 0 {
-		fmt.Println("\nTabla de Funciones:")
+		vm.println("\nTabla de Funciones:")
 		for name, addr := range vm.functionTable {
-			fmt.Printf("  %s -> PC: %d\n", name, addr)
+			vm.println("  ", name, " -> PC: ", addr)
 		}
 	}
 
 	// Parámetros pendientes
 	if len(vm.paramStack) > 0 {
-		fmt.Println("\nParámetros pendientes:")
+		vm.println("\nParámetros pendientes:")
 		for i, param := range vm.paramStack {
-			fmt.Printf("  [%d] %v\n", i, param)
+			vm.println("  [", i, "] ", param)
 		}
 	}
 
-	fmt.Println(strings.Repeat("=", 60))
+	vm.println(strings.Repeat("=", 60))
 }
