@@ -818,3 +818,24 @@ func (vm *VirtualMachine) PrintMemoryState() {
 
 	vm.println(strings.Repeat("=", 60))
 }
+
+func (vm *VirtualMachine) Reset() {
+	// Limpiar memoria global (mantener solo lo esencial)
+	vm.memory = make(map[int]interface{})
+
+	// Reiniciar program counter
+	vm.pc = 0
+
+	// Limpiar call stack
+	vm.callStack = make([]CallFrame, 0)
+
+	// Limpiar stack de parámetros
+	vm.paramStack = make([]interface{}, 0)
+
+	// MANTENER las constantes y tabla de funciones (no cambian entre ejecuciones)
+	// vm.constants y vm.functionTable NO se limpian
+
+	if vm.debug {
+		vm.debugPrintln("🔄 VM: Estado reiniciado para nueva ejecución")
+	}
+}

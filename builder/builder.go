@@ -6,8 +6,7 @@ import (
 	"fmt"
 )
 
-// DirectoryBuilder SIMPLIFICADO - SOLO maneja tabla de símbolos
-// YA NO maneja cuádruplos ni callbacks complejos
+// DirectoryBuilder tabla de simbolos
 type DirectoryBuilder struct {
 	*grammar.BaseBabyDuckListener
 
@@ -17,7 +16,7 @@ type DirectoryBuilder struct {
 	Debug         bool
 }
 
-// NewDirectoryBuilder crea un builder simplificado
+// NewDirectoryBuilder
 func NewDirectoryBuilder(debug bool, funcDir *symbols.FunctionDirectory, constTable *symbols.ConstantTable) *DirectoryBuilder {
 	return &DirectoryBuilder{
 		BaseBabyDuckListener: &grammar.BaseBabyDuckListener{},
@@ -104,21 +103,6 @@ func (d *DirectoryBuilder) EnterParam(ctx *grammar.ParamContext) {
 
 	d.debugLog("Parámetro declarado: %s (%s)", paramName, paramType)
 }
-
-// ========== YA NO HAY CALLBACKS DE CUÁDRUPLOS ==========
-// ELIMINADOS:
-// - ExitAssign
-// - ExitPrint_stmt
-// - ExitCondition
-// - ExitCycle
-// - ExitF_call
-// - EnterMulop / EnterAddop
-// - ExitTerm / ExitAdd_expr
-// - Etc.
-
-// Todo eso ahora lo maneja el PureVisitor
-
-// ========== UTILIDADES ==========
 
 func (d *DirectoryBuilder) addError(msg string) {
 	// Evitar duplicados

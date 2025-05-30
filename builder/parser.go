@@ -6,7 +6,7 @@ import (
 	"github.com/antlr4-go/antlr/v4"
 )
 
-// PureVisitorParser - Parser que usa la nueva arquitectura limpia
+// PureVisitorParser parser para el nuevo sistema de cuadruplos
 type PureVisitorParser struct {
 	sourceCode    string
 	debug         bool

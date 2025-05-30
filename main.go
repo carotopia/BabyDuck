@@ -19,7 +19,7 @@ func main() {
 	// Crear aplicación
 	myApp := app.New()
 	myApp.SetIcon(theme.DocumentIcon())
-	myWindow := myApp.NewWindow("🦆 BabyDuck Compiler")
+	myWindow := myApp.NewWindow("🐣 BabyDuck Compiler 🐣")
 	myWindow.Resize(fyne.NewSize(1200, 800))
 
 	// Editor de código
@@ -28,29 +28,37 @@ func main() {
 	codeEditor.Wrapping = fyne.TextWrapWord
 
 	// Código de ejemplo por defecto
-	defaultCode := `program TestBasico;
+	defaultCode := `
 
-var x, y: int;
+program factorial;
 
-void saludar(nombre : int) [
+var n, factorial, i: int;
+
+void printNumber(n : int) [
 {
-    print("Hola numero", nombre);
-    print("Tu cuadrado es:", nombre * nombre);
+    print("El numero es", n + n * 10);
 }
+];
+
+void a(n: int) [
+   {
+    printNumber(n);
+   }
 ];
 
 main
 {
-    print("🚀 BabyDuck Compiler GUI");
-    x = 7;
-    y = 3;
-    
-    print("Variables:", x, y);
-    saludar(x);
-    saludar(y);
-    
-    print("Suma:", x + y);
-    print("✅ Programa terminado");
+    n = 5;
+    factorial = 1;
+
+    i = n;
+    while (i > 1) do {
+        factorial = factorial * i;
+        i = i - 1;
+    };
+
+    print("factorial", factorial);
+    a(5);
 }
 
 end`
@@ -66,12 +74,12 @@ end`
 	debugCheck := widget.NewCheck("Modo Debug", nil)
 
 	// Botón compilar
-	compileBtn := widget.NewButton("🔨 Compilar y Ejecutar", func() {
+	compileBtn := widget.NewButton("🌟 Compilar y Ejecutar 🌟", func() {
 		sourceCode := codeEditor.Text
 		debug := debugCheck.Checked
 
 		if strings.TrimSpace(sourceCode) == "" {
-			outputArea.SetText("❌ Error: No hay código para compilar")
+			outputArea.SetText("🍓 Error: No hay código para  🍓")
 			return
 		}
 
@@ -82,51 +90,45 @@ end`
 	compileBtn.Importance = widget.HighImportance
 
 	// Botón limpiar
-	clearBtn := widget.NewButton("🗑️ Limpiar Editor", func() {
+	clearBtn := widget.NewButton("🥨️ Limpiar Editor", func() {
 		codeEditor.SetText("")
 		outputArea.SetText("")
 	})
 
 	// Botón ejemplo
-	exampleBtn := widget.NewButton("📄 Cargar Ejemplo", func() {
-		exampleCode := `program Ejemplo;
+	exampleBtn := widget.NewButton("🐱 Cargar Ejemplo", func() {
+		exampleCode := `program Fibonacci;
 
-var n, factorial, i: int;
+program Fibonacci;
 
-void printFactorial(num : int, fact : int) [
-{
-    print("El factorial de", num, "es:", fact);
-}
-];
+var a, b, temp: int;
 
-main
-{
-    print("=== CALCULADOR DE FACTORIAL ===");
-    n = 5;
-    factorial = 1;
-    i = n;
-    
-    print("Calculando factorial de", n);
-    
-    while (i > 1) do {
-        factorial = factorial * i;
-        i = i - 1;
-    };
-    
-    printFactorial(n, factorial);
-    
-    print("=== FIN ===");
+main 
+{ 
+    a = 0;
+    b = 1;
+
+    while (a < 100)  { 
+        print(a);
+        temp = a + b; 
+        a = b;
+        b = temp;
+    } do;
+print("Hola", 5*5 /5  + (3 -1));
+
 }
 
-end`
+end
+
+`
 		codeEditor.SetText(exampleCode)
 		outputArea.SetText("Ejemplo cargado. Presiona 'Compilar y Ejecutar'")
 	})
 
 	// Botón acerca de
-	aboutBtn := widget.NewButton("ℹ️ Acerca de", func() {
+	aboutBtn := widget.NewButton("🌠 Acerca de", func() {
 		dialog.ShowInformation("Acerca de BabyDuck Compiler",
-			"🦆 BabyDuck Compiler v1.0\n\n"+
+			"🐥 BabyDuck Compiler 🐥\n\n"+
 				"Compilador con máquina virtual integrada\n"+
 				"Características:\n"+
 				"• Funciones con parámetros\n"+
@@ -148,14 +150,14 @@ end`
 
 	// Layout principal
 	leftPanel := container.NewBorder(
-		widget.NewLabel("📝 Editor de Código"),
+		widget.NewLabel("🌼 Editor de Código 🌼"),
 		buttonContainer,
 		nil, nil,
 		codeEditor,
 	)
 
 	rightPanel := container.NewBorder(
-		widget.NewLabel("📊 Salida del Compilador"),
+		widget.NewLabel("⭐ Salida del Compilador ⭐"),
 		nil, nil, nil,
 		outputArea,
 	)
@@ -172,7 +174,7 @@ end`
 func compileAndRun(sourceCode string, debug bool) string {
 	var output strings.Builder
 
-	output.WriteString("🔨 COMPILANDO...\n")
+	output.WriteString("🌟 COMPILANDO 🌟\n")
 	output.WriteString(strings.Repeat("=", 50) + "\n")
 
 	// Crear parser
@@ -182,18 +184,18 @@ func compileAndRun(sourceCode string, debug bool) string {
 	symbolTable, errors := parser.Parse()
 
 	if len(errors) > 0 {
-		output.WriteString("❌ ERRORES DE COMPILACIÓN:\n")
+		output.WriteString("🍓 ERRORES DE COMPILACIÓN 🍓\n")
 		for i, err := range errors {
 			output.WriteString(fmt.Sprintf("%d. %s\n", i+1, err))
 		}
 		return output.String()
 	}
 
-	output.WriteString("✅ Compilación exitosa!\n\n")
+	output.WriteString("✨ Compilación exitosa! ✨\n\n")
 
 	// Mostrar tabla de símbolos si está en debug
 	if debug && symbolTable != nil {
-		output.WriteString("📋 TABLA DE SÍMBOLOS:\n")
+		output.WriteString("🍰 TABLA DE SÍMBOLOS 🍰\n")
 		for scope, funcInfo := range symbolTable.Directory {
 			output.WriteString(fmt.Sprintf("  Scope: %s\n", scope))
 			if len(funcInfo.Variables) > 0 {
@@ -216,7 +218,7 @@ func compileAndRun(sourceCode string, debug bool) string {
 	}
 
 	if debug && len(typedQuadruples) > 0 {
-		output.WriteString("📊 CUÁDRUPLOS GENERADOS:\n")
+		output.WriteString("💫 CUÁDRUPLOS GENERADOS 💫 :\n")
 		for i, quad := range typedQuadruples {
 			output.WriteString(fmt.Sprintf("%3d: %-10s %-10v %-10v %-10v\n",
 				i, quad.Operator, quad.LeftOperand, quad.RightOperand, quad.Result))
@@ -226,7 +228,7 @@ func compileAndRun(sourceCode string, debug bool) string {
 
 	// Ejecutar con máquina virtual
 	if len(typedQuadruples) > 0 {
-		output.WriteString("🚀 EJECUTANDO...\n")
+		output.WriteString("⚡ EJECUTANDO ⚡ \n")
 		output.WriteString(strings.Repeat("=", 50) + "\n")
 
 		// Crear VM
@@ -285,12 +287,12 @@ func compileAndRun(sourceCode string, debug bool) string {
 		}
 
 		if err != nil {
-			output.WriteString(fmt.Sprintf("❌ Error de ejecución: %v\n", err))
+			output.WriteString(fmt.Sprintf("🌧 Error de ejecución: %v\n 🌧", err))
 		} else {
-			output.WriteString("✅ Ejecución completada exitosamente!\n")
+			output.WriteString("⚡ Ejecución completada exitosamente!\n")
 		}
 	} else {
-		output.WriteString("⚠️ No hay cuádruplos para ejecutar\n")
+		output.WriteString("🏵️️ No hay cuádruplos para ejecutar 🏵️\n")
 	}
 
 	return output.String()
