@@ -1,32 +1,51 @@
 program CompilerV1;
 
-var n, factorial, i: int;
-
-void printNumber(n : int) [
+void factorial(m : int) [
+var f, i : int;
 {
-    print("El numero es", n + n * 10);
+   f = 1;
+   i = m;
+   while (i > 1) do {
+       f = f * i;
+       i = i - 1;
+   }  ;
+   print("Factorial de", m, "es", f);
 }
 ];
 
-void a(n: int) [
-   {
-    printNumber(n);
-   }
+void fibonacci(max: int) [
+var a, b, temp : int;
+{
+   a = 0;
+   b = 1;
+   print("Serie Fibonacci hasta", max, ":");
+   print(a);
+   print(b);
+   while (b < max) do {
+       temp = a + b;
+       if (temp < max) {
+           print(temp);
+       };
+       a = b;
+       b = temp;
+   };
+}
+];
+
+void pelos(n: int) [
+{
+   factorial(n);
+}
 ];
 
 main
 {
-    n = 5;
-    factorial = 1;
+   pelos(5);
+   pelos(2);
+   fibonacci(50);
 
-    i = n;
-    while (i > 1) do {
-        factorial = factorial * i;
-        i = i - 1;
-    };
 
-    print("factorial", factorial);
-    a(5);
+
+
 }
-
 end

@@ -8,8 +8,6 @@ import (
 	"fmt"
 )
 
-// ========== VISITOR PURO - SOLO CUÁDRUPLOS ==========
-
 type PureQuadrupleVisitor struct {
 	Directory     *symbols.FunctionDirectory
 	ConstantTable *symbols.ConstantTable
@@ -17,7 +15,6 @@ type PureQuadrupleVisitor struct {
 	Errors        []string
 	Debug         bool
 
-	// Pila para saltos (condicionales y ciclos)
 	jumpStack []int
 
 	// Para funciones
@@ -28,7 +25,6 @@ type PureQuadrupleVisitor struct {
 	debugExpressions bool
 }
 
-// Resultado de evaluar una expresión
 type ExpressionResult struct {
 	Address interface{}
 	Type    string
@@ -73,7 +69,6 @@ func (v *PureQuadrupleVisitor) VisitProgram(ctx *grammar.ProgramContext) {
 		}
 	}
 
-	// Marcar inicio del main y llenar GOTO inicial
 	if len(v.jumpStack) > 0 {
 		mainStart := v.quadQueue.Size()
 		mainGotoIndex := v.jumpStack[0]
@@ -82,7 +77,6 @@ func (v *PureQuadrupleVisitor) VisitProgram(ctx *grammar.ProgramContext) {
 		v.debugLog("Main starts at quadruple: %d", mainStart)
 	}
 
-	// Procesar body principal (main) - CORRECCIÓN: casting
 	if bodyCtx, ok := ctx.Body().(*grammar.BodyContext); ok && bodyCtx != nil {
 		v.VisitBody(bodyCtx)
 	}
@@ -97,7 +91,7 @@ func (v *PureQuadrupleVisitor) VisitBody(ctx *grammar.BodyContext) {
 
 	if ctx.AllStatement() != nil {
 		for _, stmt := range ctx.AllStatement() {
-			// CORRECCIÓN: casting seguro
+
 			if stmtCtx, ok := stmt.(*grammar.StatementContext); ok && stmtCtx != nil {
 				v.VisitStatement(stmtCtx)
 			}
@@ -132,8 +126,6 @@ func (v *PureQuadrupleVisitor) VisitStatement(ctx *grammar.StatementContext) {
 	}
 }
 
-// ========== CICLOS WHILE - IMPLEMENTACIÓN CORRECTA ==========
-
 func (v *PureQuadrupleVisitor) VisitCycle(ctx *grammar.CycleContext) {
 	v.debugLog("=== Processing While Loop ===")
 
@@ -155,7 +147,7 @@ func (v *PureQuadrupleVisitor) VisitCycle(ctx *grammar.CycleContext) {
 			return
 		}
 
-		// 3. Generar GOTOF (se llenará después)
+		// 3. Generar GOTOF
 		conditionalJumpPosition := v.quadQueue.Add("GOTOF", conditionResult.Address, "", nil)
 		v.debugLog("Generated GOTOF at position: %d", conditionalJumpPosition)
 
@@ -182,7 +174,6 @@ func (v *PureQuadrupleVisitor) VisitCycle(ctx *grammar.CycleContext) {
 func (v *PureQuadrupleVisitor) VisitExpression(ctx *grammar.ExpressionContext) *ExpressionResult {
 	v.debugLog("VisitExpression: %s", ctx.GetText())
 
-	// CORRECCIÓN: casting para rel_expr
 	if relExprCtx, ok := ctx.Rel_expr().(*grammar.Rel_exprContext); ok && relExprCtx != nil {
 		return v.VisitRelExpr(relExprCtx)
 	}
@@ -193,7 +184,6 @@ func (v *PureQuadrupleVisitor) VisitExpression(ctx *grammar.ExpressionContext) *
 func (v *PureQuadrupleVisitor) VisitRelExpr(ctx *grammar.Rel_exprContext) *ExpressionResult {
 	v.debugLog("VisitRelExpr: %s", ctx.GetText())
 
-	// CORRECCIÓN: casting para add_expr
 	var leftResult *ExpressionResult
 	if addExprCtx, ok := ctx.Add_expr(0).(*grammar.Add_exprContext); ok && addExprCtx != nil {
 		leftResult = v.VisitAddExpr(addExprCtx)
@@ -278,14 +268,12 @@ func (v *PureQuadrupleVisitor) VisitFactor(ctx *grammar.FactorContext) *Expressi
 	v.debugLog("VisitFactor: %s", ctx.GetText())
 
 	if ctx.Expression() != nil {
-		// CORRECCIÓN: casting para expression en paréntesis
 		if exprCtx, ok := ctx.Expression().(*grammar.ExpressionContext); ok && exprCtx != nil {
 			return v.VisitExpression(exprCtx)
 		}
 	}
 
 	if ctx.Addop() != nil {
-		// CORRECCIÓN: casting para value
 		if valueCtx, ok := ctx.Value().(*grammar.ValueContext); ok && valueCtx != nil {
 			valueResult := v.VisitValue(valueCtx)
 			sign := ctx.Addop().GetText()
@@ -299,7 +287,6 @@ func (v *PureQuadrupleVisitor) VisitFactor(ctx *grammar.FactorContext) *Expressi
 		}
 	}
 
-	// CORRECCIÓN: casting para value normal
 	if valueCtx, ok := ctx.Value().(*grammar.ValueContext); ok && valueCtx != nil {
 		return v.VisitValue(valueCtx)
 	}
@@ -384,7 +371,7 @@ func (v *PureQuadrupleVisitor) VisitPrintStatement(ctx *grammar.Print_stmtContex
 			v.quadQueue.Add("print", stringValue, "", "")
 
 		case pexpr.Expression() != nil:
-			// CORRECCIÓN: casting para expression
+
 			if exprCtx, ok := pexpr.Expression().(*grammar.ExpressionContext); ok && exprCtx != nil {
 				exprResult := v.VisitExpression(exprCtx)
 				if exprResult.Type != "error" {
@@ -400,7 +387,6 @@ func (v *PureQuadrupleVisitor) VisitPrintStatement(ctx *grammar.Print_stmtContex
 func (v *PureQuadrupleVisitor) VisitCondition(ctx *grammar.ConditionContext) {
 	v.debugLog("=== Processing Condition ===")
 
-	// CORRECCIÓN: casting para expression en condición
 	if exprCtx, ok := ctx.Expression().(*grammar.ExpressionContext); ok && exprCtx != nil {
 		condResult := v.VisitExpression(exprCtx)
 		if condResult.Type == "error" {
@@ -428,7 +414,6 @@ func (v *PureQuadrupleVisitor) VisitCondition(ctx *grammar.ConditionContext) {
 		v.quadQueue.FillJump(lastGotoF, elseStart)
 		v.jumpStack = v.jumpStack[:len(v.jumpStack)-1]
 
-		// CORRECCIÓN: casting para else body
 		if elseBodyCtx, ok := ctx.Else_part().Body().(*grammar.BodyContext); ok && elseBodyCtx != nil {
 			v.VisitBody(elseBodyCtx)
 		}
@@ -449,28 +434,45 @@ func (v *PureQuadrupleVisitor) VisitFunction(ctx *grammar.FuncContext) {
 	functionName := ctx.ID().GetText()
 	v.debugLog("Processing Function: %s", functionName)
 
+	err := v.Directory.EnterFunction(functionName)
+	if err != nil {
+		v.addError(fmt.Sprintf("Error entrando a función '%s': %v", functionName, err))
+		return
+	}
+
 	startQuad := v.quadQueue.GenerateFUNC(functionName, "void")
 	v.functionStarts[functionName] = startQuad
 
+	// Procesar parámetros
 	if ctx.Param_list() != nil {
 		for i, paramCtx := range ctx.Param_list().AllParam() {
 			paramType := paramCtx.Type_().GetText()
 			paramName := paramCtx.ID().GetText()
+
+			// Solo generar cuádruple, NO agregar a tabla (ya lo hizo DirectoryBuilder)
 			address := 4000 + i
 			v.quadQueue.GeneratePARAM(paramType, paramName, address)
+			v.debugLog("Generated PARAM quadruple for '%s' (%s)", paramName, paramType)
 		}
 	}
 
 	if ctx.Funcbody() != nil && ctx.Funcbody().Body() != nil {
-		// CORRECCIÓN: casting para function body
 		if funcBodyCtx, ok := ctx.Funcbody().Body().(*grammar.BodyContext); ok && funcBodyCtx != nil {
 			v.VisitBody(funcBodyCtx)
 		}
 	}
 
+	// Generar ENDFUNC
 	v.quadQueue.GenerateENDFUNC()
 	endQuad := v.quadQueue.Size() - 1
 	v.Directory.SetFunctionQuadruples(functionName, startQuad, endQuad)
+
+	err = v.Directory.ExitFunction()
+	if err != nil {
+		v.addError(fmt.Sprintf("Error saliendo de función '%s': %v", functionName, err))
+	}
+
+	v.debugLog("Function '%s' processed successfully", functionName)
 }
 
 func (v *PureQuadrupleVisitor) VisitFunctionCall(ctx *grammar.F_callContext) {

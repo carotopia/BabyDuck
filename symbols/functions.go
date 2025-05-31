@@ -45,23 +45,7 @@ type FunctionInfo struct {
 	Variables      VariableTable
 }
 
-// Adds a new function to the directory
-func (fd *FunctionDirectory) AddFunction(functionName string, params []Variable) error {
-	if _, exists := fd.Directory[functionName]; exists {
-		return fmt.Errorf("error: function '%s' already declared in current scope", functionName)
-	}
-
-	fd.Directory[functionName] = &FunctionInfo{
-		Params:         params,
-		StartQuadruple: -1,
-		EndQuadruple:   -1,
-		LocalVarCount:  0,
-		TempVarCount:   0,
-		Variables:      make(VariableTable),
-	}
-
-	return nil
-}
+// 🔧 CORREGIR ValidateFunctionCall en functions.go
 
 func (fd *FunctionDirectory) ValidateFunctionCall(name string, numArgs int) error {
 	funcInfo, exists := fd.Directory[name]
@@ -72,6 +56,74 @@ func (fd *FunctionDirectory) ValidateFunctionCall(name string, numArgs int) erro
 	expected := len(funcInfo.Params)
 	if expected != numArgs {
 		return fmt.Errorf("error: function '%s' expects %d arguments, got %d", name, expected, numArgs)
+	}
+
+	return nil
+}
+func (fd *FunctionDirectory) DebugFunctionInfo(functionName string) {
+	funcInfo, exists := fd.Directory[functionName]
+	if !exists {
+		fmt.Printf("[DEBUG] Función '%s' no existe\n", functionName)
+		return
+	}
+
+	fmt.Printf("[DEBUG] === FUNCIÓN '%s' ===\n", functionName)
+	fmt.Printf("[DEBUG] Params count: %d\n", len(funcInfo.Params))
+	for i, param := range funcInfo.Params {
+		fmt.Printf("[DEBUG]   Param[%d]: tipo=%s, addr=%d\n", i, param.Type, param.MemoryAddress)
+	}
+
+	fmt.Printf("[DEBUG] Variables count: %d\n", len(funcInfo.Variables))
+	for name, variable := range funcInfo.Variables {
+		fmt.Printf("[DEBUG]   Variable '%s': tipo=%s, addr=%d\n", name, variable.Type, variable.MemoryAddress)
+	}
+	fmt.Printf("[DEBUG] ========================\n")
+}
+
+// 🔧 ALTERNATIVA: Si quieres seguir contando por direcciones, usa un rango más específico
+func (fd *FunctionDirectory) ValidateFunctionCallByRange(name string, numArgs int) error {
+	funcInfo, exists := fd.Directory[name]
+	if !exists {
+		return fmt.Errorf("error: function '%s' is not declared", name)
+	}
+
+	// 🔧 CONTAR SOLO LAS PRIMERAS VARIABLES EN EL RANGO LOCAL
+	// Los parámetros siempre son las primeras variables que se agregan a una función
+	// y tienen direcciones consecutivas empezando en 4000, 5000, 6000
+	paramCount := 0
+	minAddress := 10000 // Encontrar la dirección mínima
+
+	// Encontrar la dirección más baja (primer parámetro)
+	for _, variable := range funcInfo.Variables {
+		if variable.MemoryAddress >= 4000 && variable.MemoryAddress < 7000 {
+			if variable.MemoryAddress < minAddress {
+				minAddress = variable.MemoryAddress
+			}
+		}
+	}
+
+	// Contar variables consecutivas desde la dirección más baja
+	// Los parámetros son siempre los primeros y consecutivos
+	if minAddress < 10000 {
+		baseAddress := minAddress - (minAddress % 1000) // 4000, 5000, o 6000
+		for addr := baseAddress; addr < baseAddress+100; addr++ {
+			found := false
+			for _, variable := range funcInfo.Variables {
+				if variable.MemoryAddress == addr {
+					found = true
+					break
+				}
+			}
+			if found {
+				paramCount++
+			} else {
+				break // Los parámetros son consecutivos, si no hay uno, terminamos
+			}
+		}
+	}
+
+	if paramCount != numArgs {
+		return fmt.Errorf("error: function '%s' expects %d arguments, got %d", name, paramCount, numArgs)
 	}
 
 	return nil
@@ -216,4 +268,78 @@ func (fd *FunctionDirectory) PrintFunctionInfo() {
 		fmt.Printf("  Total Variables: %d\n", len(info.Variables))
 	}
 	fmt.Println("=============================")
+}
+
+func (fd *FunctionDirectory) AddFunction(functionName string, params []Variable) error {
+	if _, exists := fd.Directory[functionName]; exists {
+		return fmt.Errorf("error: function '%s' already declared in current scope", functionName)
+	}
+
+	fd.Directory[functionName] = &FunctionInfo{
+		Params:         []Variable{}, // Siempre vacío al inicio
+		StartQuadruple: -1,
+		EndQuadruple:   -1,
+		LocalVarCount:  0,
+		TempVarCount:   0,
+		Variables:      make(VariableTable),
+	}
+
+	return nil
+}
+
+func (fd *FunctionDirectory) AddFunctionParameter(funcName, paramName, paramType string) error {
+	funcInfo, exists := fd.Directory[funcName]
+	if !exists {
+		return fmt.Errorf("error: función '%s' no declarada", funcName)
+	}
+
+	if _, exists := funcInfo.Variables[paramName]; exists {
+		return fmt.Errorf("error: parámetro '%s' ya declarado en función '%s'", paramName, funcName)
+	}
+
+	// 🔧 DIRECCIÓN BASADA EN NÚMERO DE PARÁMETROS, NO CONTADOR GLOBAL
+	paramCount := len(funcInfo.Params)
+	var address int
+	switch paramType {
+	case "int":
+		address = 4000 + paramCount
+	case "float":
+		address = 5000 + paramCount
+	case "bool":
+		address = 6000 + paramCount
+	default:
+		return fmt.Errorf("error: tipo de parámetro '%s' no soportado", paramType)
+	}
+
+	paramVar := Variable{
+		Type:          paramType,
+		Value:         nil,
+		MemoryAddress: address,
+	}
+
+	funcInfo.Params = append(funcInfo.Params, paramVar)
+	funcInfo.Variables[paramName] = paramVar
+
+	return nil
+}
+func (fd *FunctionDirectory) EnterFunction(functionName string) error {
+	if _, exists := fd.Directory[functionName]; !exists {
+		return fmt.Errorf("error: función '%s' no declarada", functionName)
+	}
+
+	// 🔧 VERIFICAR QUE NO ESTEMOS YA EN LA FUNCIÓN
+	currentScope := fd.GetCurrentScope()
+	if currentScope != functionName {
+		fd.CurrentScope = append(fd.CurrentScope, functionName)
+	}
+	return nil
+}
+
+func (fd *FunctionDirectory) ExitFunction() error {
+	if len(fd.CurrentScope) <= 1 {
+		return fmt.Errorf("error: no se puede salir del scope global")
+	}
+
+	fd.CurrentScope = fd.CurrentScope[:len(fd.CurrentScope)-1]
+	return nil
 }

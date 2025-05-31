@@ -49,17 +49,25 @@ func (fd *FunctionDirectory) AddVariable(name string, varType string) error {
 			return fmt.Errorf("error: tipo de variable '%s' no soportado", varType)
 		}
 	} else {
-		// Variables locales - usar contadores locales
+		// Variables locales - calcular dirección basada en parámetros existentes
+		paramCount := len(funcInfo.Params)
+		localVarCount := 0
+
+		// Contar variables locales ya existentes (excluyendo parámetros y temporales)
+		for _, variable := range funcInfo.Variables {
+			addr := variable.MemoryAddress
+			if addr >= 4000 && addr < 7000 && addr >= 4000+paramCount {
+				localVarCount++
+			}
+		}
+
 		switch varType {
 		case "int":
-			address = localIntCounter
-			localIntCounter++
+			address = 4000 + paramCount + localVarCount // ✅ Empezar DESPUÉS de parámetros
 		case "float":
-			address = localFloatCounter
-			localFloatCounter++
+			address = 5000 + paramCount + localVarCount
 		case "bool":
-			address = localBoolCounter
-			localBoolCounter++
+			address = 6000 + paramCount + localVarCount
 		default:
 			return fmt.Errorf("error: tipo de variable '%s' no soportado", varType)
 		}

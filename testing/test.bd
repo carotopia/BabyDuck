@@ -1,45 +1,11 @@
-program BabyDuckProgram2;
-
-var a, b, c : int;
-a = 5 + 3 * 2;
-
-var m, n, p : int;
-u, v : float;
-
-void computeSum(m: int, n: int) [
-    var result : int;
-    {
-        result = m + n;
-        print("Sum is", result), eee;
-    }
-];
-
-void greet() [
-    {
-        print("Hello from greet!");
-    }
-];
-
+program cond;
+var x: int;
 main {
-    m = 8;
-    n = 15;
-    p = m * (n - 5) + 2 ;
-    u = 1.23;
-    v = 4.56;
-    n : int = 0;
-
-    if (ooop < 100) {
-        print("p is less than 100");
+    x = 10;
+    if (x > 5) {
+        print("Mayor");
     } else {
-        print("p is greater or equal to 100");
+        print("Menor");
     };
-
-    while (ww > 0) do {
-        n = n - 3;
-        print(n);
-    };
-
-    computeSum(m, n);
-    greet();
 }
 end

@@ -5,295 +5,162 @@ import (
 	"BabyDuckCompiler/quads"
 	"BabyDuckCompiler/vm"
 	"fmt"
-	"fyne.io/fyne/v2"
+	"io/ioutil"
+	"os"
 	"strings"
-
-	"fyne.io/fyne/v2/app"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/dialog"
-	"fyne.io/fyne/v2/theme"
-	"fyne.io/fyne/v2/widget"
 )
 
 func main() {
-	// Crear aplicación
-	myApp := app.New()
-	myApp.SetIcon(theme.DocumentIcon())
-	myWindow := myApp.NewWindow("🐣 BabyDuck Compiler 🐣")
-	myWindow.Resize(fyne.NewSize(1200, 800))
+	fmt.Println("🐣 BabyDuck Compiler - Terminal  🐣")
+	fmt.Println(strings.Repeat("=", 50))
 
-	// Editor de código
-	codeEditor := widget.NewMultiLineEntry()
-	codeEditor.SetPlaceHolder("Escribe tu código BabyDuck aquí...")
-	codeEditor.Wrapping = fyne.TextWrapWord
-
-	// Código de ejemplo por defecto
-	defaultCode := `
-
-program factorial;
-
-var n, factorial, i: int;
-
-void printNumber(n : int) [
-{
-    print("El numero es", n + n * 10);
-}
-];
-
-void a(n: int) [
-   {
-    printNumber(n);
-   }
-];
-
-main
-{
-    n = 5;
-    factorial = 1;
-
-    i = n;
-    while (i > 1) do {
-        factorial = factorial * i;
-        i = i - 1;
-    };
-
-    print("factorial", factorial);
-    a(5);
-}
-
-end`
-	codeEditor.SetText(defaultCode)
-
-	// Área de salida
-	outputArea := widget.NewMultiLineEntry()
-	outputArea.SetPlaceHolder("La salida aparecerá aquí...")
-	outputArea.MultiLine = true
-	outputArea.Wrapping = fyne.TextWrapWord
-
-	// Checkbox para debug
-	debugCheck := widget.NewCheck("Modo Debug", nil)
-
-	// Botón compilar
-	compileBtn := widget.NewButton("🌟 Compilar y Ejecutar 🌟", func() {
-		sourceCode := codeEditor.Text
-		debug := debugCheck.Checked
-
-		if strings.TrimSpace(sourceCode) == "" {
-			outputArea.SetText("🍓 Error: No hay código para  🍓")
-			return
-		}
-
-		// Compilar y ejecutar
-		output := compileAndRun(sourceCode, debug)
-		outputArea.SetText(output)
-	})
-	compileBtn.Importance = widget.HighImportance
-
-	// Botón limpiar
-	clearBtn := widget.NewButton("🥨️ Limpiar Editor", func() {
-		codeEditor.SetText("")
-		outputArea.SetText("")
-	})
-
-	// Botón ejemplo
-	exampleBtn := widget.NewButton("🐱 Cargar Ejemplo", func() {
-		exampleCode := `program Fibonacci;
-
-program Fibonacci;
-
-var a, b, temp: int;
-
-main 
-{ 
-    a = 0;
-    b = 1;
-
-    while (a < 100)  { 
-        print(a);
-        temp = a + b; 
-        a = b;
-        b = temp;
-    } do;
-print("Hola", 5*5 /5  + (3 -1));
-
-}
-
-end
-
-`
-		codeEditor.SetText(exampleCode)
-		outputArea.SetText("Ejemplo cargado. Presiona 'Compilar y Ejecutar'")
-	})
-
-	// Botón acerca de
-	aboutBtn := widget.NewButton("🌠 Acerca de", func() {
-		dialog.ShowInformation("Acerca de BabyDuck Compiler",
-			"🐥 BabyDuck Compiler 🐥\n\n"+
-				"Compilador con máquina virtual integrada\n"+
-				"Características:\n"+
-				"• Funciones con parámetros\n"+
-				"• Ciclos while\n"+
-				"• Operaciones aritméticas\n"+
-				"• Variables locales y globales\n"+
-				"• Debug paso a paso\n\n"+
-				"¡Desarrollado en Go!", myWindow)
-	})
-
-	// Layout de botones
-	buttonContainer := container.NewHBox(
-		compileBtn,
-		clearBtn,
-		exampleBtn,
-		debugCheck,
-		aboutBtn,
-	)
-
-	// Layout principal
-	leftPanel := container.NewBorder(
-		widget.NewLabel("🌼 Editor de Código 🌼"),
-		buttonContainer,
-		nil, nil,
-		codeEditor,
-	)
-
-	rightPanel := container.NewBorder(
-		widget.NewLabel("⭐ Salida del Compilador ⭐"),
-		nil, nil, nil,
-		outputArea,
-	)
-
-	// Dividir pantalla
-	content := container.NewHSplit(leftPanel, rightPanel)
-	content.SetOffset(0.5) // 50-50 split
-
-	myWindow.SetContent(content)
-	myWindow.ShowAndRun()
-}
-
-// Función para compilar y ejecutar código
-func compileAndRun(sourceCode string, debug bool) string {
-	var output strings.Builder
-
-	output.WriteString("🌟 COMPILANDO 🌟\n")
-	output.WriteString(strings.Repeat("=", 50) + "\n")
-
-	// Crear parser
-	parser := builder.NewPureVisitorParser(sourceCode, debug)
-
-	// Compilar
-	symbolTable, errors := parser.Parse()
-
-	if len(errors) > 0 {
-		output.WriteString("🍓 ERRORES DE COMPILACIÓN 🍓\n")
-		for i, err := range errors {
-			output.WriteString(fmt.Sprintf("%d. %s\n", i+1, err))
-		}
-		return output.String()
+	// Verificar argumentos de línea de comandos
+	if len(os.Args) < 2 {
+		fmt.Println("❌ Error: Debes proporcionar un archivo .bd para compilar")
+		fmt.Println("📖 Uso: go run main.go archivo.bd [debug]")
+		fmt.Println("📖 Ejemplo: go run main.go programa.bd")
+		fmt.Println("📖 Ejemplo con debug: go run main.go programa.bd debug")
+		os.Exit(1)
 	}
 
-	output.WriteString("✨ Compilación exitosa! ✨\n\n")
+	filename := os.Args[1]
+	debug := false
+
+	// Verificar si se proporcionó el flag de debug
+	if len(os.Args) > 2 && strings.ToLower(os.Args[2]) == "debug" {
+		debug = true
+		fmt.Println("🐣 Modo debug activado")
+	}
+
+	// Leer el archivo
+	sourceCode, err := readFile(filename)
+	if err != nil {
+		fmt.Printf("🐣 Error al leer el archivo '%s': %v\n", filename, err)
+		os.Exit(1)
+	}
+
+	// Compilar y ejecutar
+	compileAndRun(sourceCode, debug)
+}
+
+// readFile lee el contenido de un archivo y devuelve su contenido como string
+func readFile(filename string) (string, error) {
+	// Verificar si el archivo existe
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		return "", fmt.Errorf("el archivo '%s' no existe", filename)
+	}
+
+	// Leer el contenido del archivo
+	content, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return "", fmt.Errorf("no se pudo leer el archivo: %v", err)
+	}
+
+	return string(content), nil
+}
+
+// compileAndRun compila y ejecuta el código fuente proporcionado
+func compileAndRun(sourceCode string, debug bool) {
+	fmt.Println("🌟 COMPILANDO...")
+
+	// 🔑 USAR TU PureVisitorParser EXISTENTE
+	parser := builder.NewPureVisitorParser(sourceCode, debug)
+
+	// 🔑 ESTO YA HACE LAS DOS PASADAS: DirectoryBuilder + Visitor
+	symbolTable, errors := parser.Parse()
+
+	// 🔧 VERIFICAR ERRORES DE COMPILACIÓN (SINTAXIS + SEMÁNTICA)
+	if len(errors) > 0 {
+		fmt.Println("🍓 ERRORES DE COMPILACIÓN:")
+		for i, err := range errors {
+			fmt.Printf("%d. %s\n", i+1, err)
+		}
+		fmt.Println("🍓 Compilación fallida. No se puede ejecutar el programa.")
+		return // 🔧 DETENER AQUÍ SI HAY ERRORES - NO CONTINUAR
+	}
+
+	fmt.Println("✅ Compilación exitosa!")
 
 	// Mostrar tabla de símbolos si está en debug
 	if debug && symbolTable != nil {
-		output.WriteString("🍰 TABLA DE SÍMBOLOS 🍰\n")
+		fmt.Println("\n🍰 TABLA DE SÍMBOLOS:")
 		for scope, funcInfo := range symbolTable.Directory {
-			output.WriteString(fmt.Sprintf("  Scope: %s\n", scope))
+			fmt.Printf("  Scope: %s\n", scope)
 			if len(funcInfo.Variables) > 0 {
 				for varName, varDetails := range funcInfo.Variables {
-					output.WriteString(fmt.Sprintf("    %s (%s) -> %d\n",
-						varName, varDetails.Type, varDetails.MemoryAddress))
+					fmt.Printf("    %s (%s) -> %d\n",
+						varName, varDetails.Type, varDetails.MemoryAddress)
 				}
 			}
 		}
-		output.WriteString("\n")
 	}
 
 	// Obtener cuádruplos
 	quadruples := parser.GetQuadruples()
-	var typedQuadruples []quads.Quadruple
+	var builderQuadruples []quads.Quadruple
 	for _, q := range quadruples {
 		if quad, ok := q.(quads.Quadruple); ok {
-			typedQuadruples = append(typedQuadruples, quad)
+			builderQuadruples = append(builderQuadruples, quad)
 		}
 	}
 
-	if debug && len(typedQuadruples) > 0 {
-		output.WriteString("💫 CUÁDRUPLOS GENERADOS 💫 :\n")
-		for i, quad := range typedQuadruples {
-			output.WriteString(fmt.Sprintf("%3d: %-10s %-10v %-10v %-10v\n",
-				i, quad.Operator, quad.LeftOperand, quad.RightOperand, quad.Result))
-		}
-		output.WriteString("\n")
+	if len(builderQuadruples) == 0 {
+		fmt.Println("🍓 No hay código válido para ejecutar")
+		return
 	}
 
-	// Ejecutar con máquina virtual
-	if len(typedQuadruples) > 0 {
-		output.WriteString("⚡ EJECUTANDO ⚡ \n")
-		output.WriteString(strings.Repeat("=", 50) + "\n")
-
-		// Crear VM
-		virtualMachine := vm.NewVirtualMachine(debug)
-
-		// NUEVO: Configurar writers para capturar output
-		var programOutput strings.Builder
-		var debugOutput strings.Builder
-
-		virtualMachine.SetOutputWriter(&programOutput)
-		if debug {
-			virtualMachine.SetDebugWriter(&debugOutput)
+	// Mostrar cuádruplos si está en debug
+	if debug {
+		fmt.Println("\n💫 CUÁDRUPLOS GENERADOS:")
+		for i, quad := range builderQuadruples {
+			fmt.Printf("%3d: %-10s %-12v %-12v %-12v\n",
+				i, quad.Operator, quad.LeftOperand, quad.RightOperand, quad.Result)
 		}
+	}
 
-		// Convertir cuádruplos
-		vmQuadruples := make([]vm.Quadruple, len(typedQuadruples))
-		for i, quad := range typedQuadruples {
-			vmQuadruples[i] = vm.Quadruple{
-				Operator:     quad.Operator,
-				LeftOperand:  quad.LeftOperand,
-				RightOperand: quad.RightOperand,
-				Result:       quad.Result,
-			}
+	fmt.Println("\n⚡ EJECUTANDO PROGRAMA:")
+	fmt.Println(strings.Repeat("-", 50))
+
+	// Crear VM y configurar para terminal
+	virtualMachine := vm.NewVirtualMachine(debug)
+	virtualMachine.Reset()
+
+	// Convertir cuádruplos al formato VM
+	vmQuadruples := make([]vm.Quadruple, len(builderQuadruples))
+	for i, quad := range builderQuadruples {
+		vmQuadruples[i] = vm.Quadruple{
+			Operator:     quad.Operator,
+			LeftOperand:  quad.LeftOperand,
+			RightOperand: quad.RightOperand,
+			Result:       quad.Result,
 		}
+	}
 
-		virtualMachine.LoadQuadruples(vmQuadruples)
+	// Cargar programa
+	virtualMachine.LoadQuadruples(vmQuadruples)
 
-		// Cargar constantes
-		constantTable := parser.GetConstantTable()
-		if constantTable != nil {
-			constants := constantTable.GetConstants()
-			virtualMachine.LoadConstants(constants)
-		} else {
-			virtualMachine.LoadConstants(make(map[int]interface{}))
-		}
-
-		// Ejecutar
-		err := virtualMachine.Execute()
-
-		// Mostrar output del programa
-		programOutputStr := programOutput.String()
-		if programOutputStr != "" {
-			output.WriteString("SALIDA DEL PROGRAMA:\n")
-			output.WriteString(programOutputStr)
-			output.WriteString("\n")
-		}
-
-		// Mostrar debug si está habilitado
-		if debug {
-			debugOutputStr := debugOutput.String()
-			if debugOutputStr != "" {
-				output.WriteString("DEBUG INFO:\n")
-				output.WriteString(debugOutputStr)
-				output.WriteString("\n")
-			}
-		}
-
-		if err != nil {
-			output.WriteString(fmt.Sprintf("🌧 Error de ejecución: %v\n 🌧", err))
-		} else {
-			output.WriteString("⚡ Ejecución completada exitosamente!\n")
-		}
+	// Cargar constantes
+	constantTable := parser.GetConstantTable()
+	if constantTable != nil {
+		constants := constantTable.GetConstants()
+		virtualMachine.LoadConstants(constants)
 	} else {
-		output.WriteString("🏵️️ No hay cuádruplos para ejecutar 🏵️\n")
+		virtualMachine.LoadConstants(make(map[int]interface{}))
 	}
 
-	return output.String()
+	// Ejecutar
+	err := virtualMachine.Execute()
+
+	fmt.Println(strings.Repeat("-", 50))
+
+	if err != nil {
+		fmt.Printf("🍓 Error de ejecución: %v\n", err)
+	} else {
+		fmt.Println("✅ Programa ejecutado correctamente!")
+	}
+
+	// Mostrar estado de memoria si está en debug
+	if debug {
+		virtualMachine.PrintMemoryState()
+	}
 }

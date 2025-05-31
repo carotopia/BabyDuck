@@ -3,8 +3,34 @@ package builder
 import (
 	"BabyDuckCompiler/grammar"
 	"BabyDuckCompiler/symbols"
+	"fmt"
 	"github.com/antlr4-go/antlr/v4"
 )
+
+// 🔧 CustomErrorCollector - detecta errores de sintaxis
+type CustomErrorCollector struct {
+	*antlr.DefaultErrorListener
+	HasErrors bool
+	Errors    []string
+}
+
+func NewCustomErrorCollector() *CustomErrorCollector {
+	return &CustomErrorCollector{
+		DefaultErrorListener: antlr.NewDefaultErrorListener(),
+		HasErrors:            false,
+		Errors:               make([]string, 0),
+	}
+}
+
+func (c *CustomErrorCollector) SyntaxError(recognizer antlr.Recognizer, offendingSymbol interface{}, line, column int, msg string, e antlr.RecognitionException) {
+	// Llamar al default para que siga mostrando los errores como antes
+	c.DefaultErrorListener.SyntaxError(recognizer, offendingSymbol, line, column, msg, e)
+
+	// Marcar que hubo errores
+	c.HasErrors = true
+	errorMsg := fmt.Sprintf("Syntax error at line %d:%d - %s", line, column, msg)
+	c.Errors = append(c.Errors, errorMsg)
+}
 
 // PureVisitorParser parser para el nuevo sistema de cuadruplos
 type PureVisitorParser struct {
@@ -25,15 +51,39 @@ func NewPureVisitorParser(sourceCode string, debug bool) *PureVisitorParser {
 	}
 }
 
-// Parse - Método principal que maneja todo el proceso
+// 🔧 Parse - Método principal que maneja todo el proceso CON MANEJO DE ERRORES
 func (p *PureVisitorParser) Parse() (*symbols.FunctionDirectory, []string) {
-	// PASO 1: Crear parser ANTLR
-	parser := p.createANTLRParser()
+	// PASO 1: Crear parser ANTLR CON ERROR COLLECTOR
+	input := antlr.NewInputStream(p.sourceCode)
+	lexer := grammar.NewBabyDuckLexer(input)
+
+	// 🔧 AGREGAR NUESTRO ERROR COLLECTOR
+	errorCollector := NewCustomErrorCollector()
+	lexer.RemoveErrorListeners()
+	lexer.AddErrorListener(errorCollector)
+
+	stream := antlr.NewCommonTokenStream(lexer, 0)
+	parser := grammar.NewBabyDuckParser(stream)
+
+	// 🔧 AGREGAR TAMBIÉN AL PARSER
+	parser.RemoveErrorListeners()
+	parser.AddErrorListener(errorCollector)
 
 	// PASO 2: Primera pasada - Builder para tabla de símbolos
 	builder := NewDirectoryBuilder(p.debug, p.functionDir, p.constantTable)
 	tree := parser.Program()
+
+	// 🔧 VERIFICAR SI HUBO ERRORES DE SINTAXIS
+	if errorCollector.HasErrors {
+		return nil, errorCollector.Errors
+	}
+
 	antlr.ParseTreeWalkerDefault.Walk(builder, tree)
+
+	// 🔧 SI HAY ERRORES SEMÁNTICOS, RETORNARLOS
+	if len(builder.Errors) > 0 {
+		return p.functionDir, builder.Errors
+	}
 
 	// PASO 3: Segunda pasada - Visitor puro para cuádruplos
 	p.visitor = NewPureQuadrupleVisitor(p.functionDir, p.constantTable, p.debug)
@@ -65,7 +115,7 @@ func (p *PureVisitorParser) createANTLRParser() *grammar.BabyDuckParser {
 	return grammar.NewBabyDuckParser(stream)
 }
 
-// ========== INTERFAZ PÚBLICA ==========
+// ========== INTERFAZ PÚBLICA ========== (SIN CAMBIOS)
 
 func (p *PureVisitorParser) GetFunctionDirectory() *symbols.FunctionDirectory {
 	return p.functionDir
