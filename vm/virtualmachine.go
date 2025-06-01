@@ -41,7 +41,7 @@ type VirtualMachine struct {
 }
 
 func NewVirtualMachine(debug bool) *VirtualMachine {
-	// 🔧 CREAR UNA SOLA MEMORIA GLOBAL
+
 	globalMemory := memory.NewExecutionMemoryMap()
 
 	return &VirtualMachine{
@@ -77,7 +77,7 @@ func (vm *VirtualMachine) print(args ...interface{}) {
 	}
 }
 
-// println wraps the printing logic
+// println juntas el print con un salto de línea
 func (vm *VirtualMachine) println(args ...interface{}) {
 	if vm.outputWriter != nil {
 		fmt.Fprintln(vm.outputWriter, args...)
@@ -177,7 +177,6 @@ func (vm *VirtualMachine) getCurrentMemoryValue(address int) (interface{}, error
 	// Intentar con memoria actual primero
 	val, err := vm.currentMemory.GetValue(address)
 	if err != nil && vm.isTempAddress(address) {
-		// 🔧 NUEVO: Si falla y es temporal, buscar en global
 		if vm.debug {
 			vm.debugPrintln("    ⚠️ Temporal no encontrado en local, buscando en global:", address)
 		}
@@ -196,7 +195,6 @@ func (vm *VirtualMachine) setCurrentMemoryValue(address int, value interface{}) 
 		return vm.globalMemory.SetValue(address, value)
 	}
 
-	// 🔧 NUEVO: Forzar usar globalMemory para temporales si currentMemory falla
 	err := vm.currentMemory.SetValue(address, value)
 	if err != nil && vm.isTempAddress(address) {
 		// Si falla con memoria local y es temporal, intentar con global
@@ -212,7 +210,7 @@ func (vm *VirtualMachine) setCurrentMemoryValue(address int, value interface{}) 
 func (vm *VirtualMachine) isGlobalAddress(address int) bool {
 	return (address >= 1000 && address <= 3999) || // Variables globales
 		(address >= 10000 && address <= 13999) || // Constantes
-		(address >= 7000 && address <= 7999) // 🔧 NUEVO: Temporales también globales
+		(address >= 7000 && address <= 7999) //
 }
 
 // getValue obtiene el valor usando el sistema de memoria mejorado
@@ -230,10 +228,19 @@ func (vm *VirtualMachine) getValue(operand interface{}) interface{} {
 			return val
 		}
 
+		// 🔧 MEJOR MANEJO DE TEMPORALES NO ENCONTRADOS
+		if v >= 7000 && v <= 9999 {
+			if vm.debug {
+				vm.debugPrint("  ⚠️ TEMPORAL[", v, "] no encontrado - esto puede ser un error\n")
+			}
+			// No inicializar automáticamente, devolver error
+			return nil
+		}
+
 		// Si no se encuentra y es una dirección de memoria, inicializar con 0
 		if v >= 1000 {
 			if vm.debug {
-				vm.debugPrint("    ⚠️  Memoria[", v, "] no encontrada, inicializando con 0\n")
+				vm.debugPrint("  Memoria[", v, "] no encontrada, inicializando con 0\n")
 			}
 			vm.setValue(v, 0)
 			return 0
@@ -262,18 +269,19 @@ func (vm *VirtualMachine) getValue(operand interface{}) interface{} {
 }
 
 // setValue asigna un valor usando el sistema de memoria tipado
-// setValue asigna un valor usando el sistema de memoria tipado
 func (vm *VirtualMachine) setValue(address interface{}, value interface{}) {
 	if addr, ok := address.(int); ok {
-		// 🔧 USAR LA FUNCIÓN MEJORADA
-		err := vm.setCurrentMemoryValue(addr, value)
+		// 🔧 CONVERSIÓN AUTOMÁTICA SEGÚN RANGO DE MEMORIA
+		convertedValue := vm.convertValueForMemoryType(addr, value)
+
+		err := vm.setCurrentMemoryValue(addr, convertedValue)
 		if err != nil && vm.debug {
 			vm.debugPrintln("    ⚠️ Error setValue:", err)
+		} else if vm.debug {
+			vm.debugPrintln("    ✅ Guardado memoria[", addr, "] =", convertedValue)
 		}
 	}
 }
-
-// Execute ejecuta los cuádruplos (similar al ejemplo)
 func (vm *VirtualMachine) Execute() error {
 	if len(vm.quadruples) == 0 {
 		vm.println("⚠️  No hay cuádruplos para ejecutar")
@@ -281,7 +289,7 @@ func (vm *VirtualMachine) Execute() error {
 	}
 
 	vm.debugPrintln("\n", strings.Repeat("=", 60))
-	vm.debugPrintln("🚀 EJECUTANDO CON MÁQUINA VIRTUAL")
+	vm.debugPrintln(" EJECUTANDO CON MÁQUINA VIRTUAL")
 	vm.debugPrintln(strings.Repeat("=", 60))
 
 	vm.pc = 0
@@ -423,16 +431,13 @@ func (vm *VirtualMachine) executeGosub(quad Quadruple) bool {
 		vm.executionStack = append(vm.executionStack, context)
 	}
 
-	// Obtener contexto actual
 	contextIndex := len(vm.executionStack) - 1
 	context := &vm.executionStack[contextIndex]
 	context.FunctionName = funcName
 	context.ReturnAddress = vm.pc + 1
 
-	// 🔧 CREAR ACTIVATION RECORD EN LUGAR DE MEMORIA NUEVA
 	vm.currentMemory.PushActivationRecord(funcName, context.ReturnAddress)
 
-	// Copiar parámetros a memoria local usando ActivationRecord
 	vm.copyParametersToLocalMemory(funcName)
 
 	// Saltar a la función
@@ -460,12 +465,10 @@ func (vm *VirtualMachine) copyParametersToLocalMemory(funcName string) {
 		}
 	}
 
-	// 🔧 ASIGNAR PARÁMETROS USANDO SetValue (que usa ActivationRecord)
 	for i, param := range vm.parameterStack {
 		if i < len(paramAddresses) {
 			paramAddr := paramAddresses[i]
 
-			// 🔧 USAR SetValue que maneja ActivationRecord automáticamente
 			err := vm.currentMemory.SetValue(paramAddr, param)
 			if err != nil {
 				if vm.debug {
@@ -620,10 +623,8 @@ func (vm *VirtualMachine) executePrint(quad Quadruple) {
 		}
 	}
 
-	// 🔧 VERIFICAR SI ES EL PRIMER PRINT DE UNA SECUENCIA
 	isFirstPrint := vm.pc == 0 || vm.quadruples[vm.pc-1].Operator != "print"
 
-	// 🔧 VERIFICAR SI ES EL ÚLTIMO PRINT DE UNA SECUENCIA
 	isLastPrint := vm.pc+1 >= len(vm.quadruples) || vm.quadruples[vm.pc+1].Operator != "print"
 
 	// Imprimir valores
@@ -949,4 +950,37 @@ func (vm *VirtualMachine) Reset() {
 	if vm.debug {
 		vm.debugPrintln("🔄 VM: Estado reiniciado para nueva ejecución")
 	}
+}
+func (vm *VirtualMachine) convertValueForMemoryType(address int, value interface{}) interface{} {
+	switch {
+	case address >= 1000 && address <= 1999: // Int globales
+		if intVal, err := vm.toInt(value); err == nil {
+			return intVal
+		}
+	case address >= 2000 && address <= 2999: // Float globales
+		if floatVal, err := vm.toFloat(value); err == nil {
+			return floatVal
+		}
+	case address >= 4000 && address <= 4999: // Int locales
+		if intVal, err := vm.toInt(value); err == nil {
+			return intVal
+		}
+	case address >= 5000 && address <= 5999: // Float locales
+		if floatVal, err := vm.toFloat(value); err == nil {
+			return floatVal
+		}
+	case address >= 7000 && address <= 7999: // Temporales int
+		if intVal, err := vm.toInt(value); err == nil {
+			return intVal
+		}
+	case address >= 8000 && address <= 8999: // Temporales float
+		if floatVal, err := vm.toFloat(value); err == nil {
+			return floatVal
+		}
+	case address >= 9000 && address <= 9999: // Temporales bool
+		return vm.toBool(value)
+	}
+
+	// Si no se puede convertir, devolver el valor original
+	return value
 }

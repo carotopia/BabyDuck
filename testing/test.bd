@@ -1,11 +1,23 @@
-program cond;
-var x: int;
+program BasicOperations;
+var
+    x, y, z: int;
+    pi, radius, area: float;
+
 main {
     x = 10;
-    if (x > 5) {
-        print("Mayor");
+    y = 5;
+    z = x + y;
+    print("Suma:", z);
+
+    pi = 3.14159;
+    radius = 5.0;
+    area = pi * radius * radius;
+    print("Área del círculo:", area);
+
+    if (z > 12) {
+        print("Z es mayor que 12");
     } else {
-        print("Menor");
+        print("Z es menor o igual que 12");
     };
 }
 end

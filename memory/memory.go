@@ -9,6 +9,10 @@ type ExecutionMemoryMap struct {
 	GlobalFloats map[int]float64 // 2000-2999
 	GlobalBools  map[int]bool    // 3000-3999
 
+	GlobalTempInts   map[int]int
+	GlobalTempFloats map[int]float64
+	GlobalTempBools  map[int]bool
+
 	// Pila de Activación (para funciones)
 	ActivationStack []*ActivationRecord
 
@@ -43,9 +47,13 @@ type ActivationRecord struct {
 // NewExecutionMemoryMap crea un nuevo mapa de memoria
 func NewExecutionMemoryMap() *ExecutionMemoryMap {
 	return &ExecutionMemoryMap{
-		GlobalInts:      make(map[int]int),
-		GlobalFloats:    make(map[int]float64),
-		GlobalBools:     make(map[int]bool),
+		GlobalInts:       make(map[int]int),
+		GlobalFloats:     make(map[int]float64),
+		GlobalBools:      make(map[int]bool),
+		GlobalTempInts:   make(map[int]int),
+		GlobalTempFloats: make(map[int]float64),
+		GlobalTempBools:  make(map[int]bool),
+
 		ActivationStack: make([]*ActivationRecord, 0),
 		ConstantInts:    make(map[int]int),
 		ConstantFloats:  make(map[int]float64),
@@ -71,7 +79,7 @@ func (emm *ExecutionMemoryMap) GetValue(address int) (interface{}, error) {
 			return val, nil
 		}
 
-	// Variables Locales (registro de activación actual)
+	// Variables Locales
 	case address >= 4000 && address <= 4999:
 		if len(emm.ActivationStack) > 0 {
 			currentRecord := emm.ActivationStack[len(emm.ActivationStack)-1]
@@ -94,11 +102,18 @@ func (emm *ExecutionMemoryMap) GetValue(address int) (interface{}, error) {
 			}
 		}
 
-	// Variables Temporales
+	// Variables Temporales - 🔧 SOPORTAR GLOBALES Y LOCALES
 	case address >= 7000 && address <= 7999:
 		if len(emm.ActivationStack) > 0 {
+			// Buscar en temporales locales primero
 			currentRecord := emm.ActivationStack[len(emm.ActivationStack)-1]
 			if val, exists := currentRecord.TempInts[address]; exists {
+				return val, nil
+			}
+		}
+		// Si no está en locales o no hay stack, buscar en globales
+		if emm.GlobalTempInts != nil {
+			if val, exists := emm.GlobalTempInts[address]; exists {
 				return val, nil
 			}
 		}
@@ -109,10 +124,20 @@ func (emm *ExecutionMemoryMap) GetValue(address int) (interface{}, error) {
 				return val, nil
 			}
 		}
+		if emm.GlobalTempFloats != nil {
+			if val, exists := emm.GlobalTempFloats[address]; exists {
+				return val, nil
+			}
+		}
 	case address >= 9000 && address <= 9999:
 		if len(emm.ActivationStack) > 0 {
 			currentRecord := emm.ActivationStack[len(emm.ActivationStack)-1]
 			if val, exists := currentRecord.TempBools[address]; exists {
+				return val, nil
+			}
+		}
+		if emm.GlobalTempBools != nil {
+			if val, exists := emm.GlobalTempBools[address]; exists {
 				return val, nil
 			}
 		}
@@ -136,9 +161,10 @@ func (emm *ExecutionMemoryMap) GetValue(address int) (interface{}, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("dirección %d no encontrada en memoria", address)
+	return nil, fmt.Errorf("no se puede leer la dirección %d", address)
 }
 
+// SetValue establece un valor en cualquier segmento de memoria
 // SetValue establece un valor en cualquier segmento de memoria
 func (emm *ExecutionMemoryMap) SetValue(address int, value interface{}) error {
 	switch {
@@ -167,21 +193,38 @@ func (emm *ExecutionMemoryMap) SetValue(address int, value interface{}) error {
 			currentRecord.LocalBools[address] = value.(bool)
 		}
 
-	// Variables Temporales
+	// Variables Temporales - 🔧 SOPORTAR GLOBALES Y LOCALES
 	case address >= 7000 && address <= 7999:
 		if len(emm.ActivationStack) > 0 {
+			// En contexto de función - usar temporales locales
 			currentRecord := emm.ActivationStack[len(emm.ActivationStack)-1]
 			currentRecord.TempInts[address] = value.(int)
+		} else {
+			// En contexto global (main) - usar memoria global
+			if emm.GlobalTempInts == nil {
+				emm.GlobalTempInts = make(map[int]int)
+			}
+			emm.GlobalTempInts[address] = value.(int)
 		}
 	case address >= 8000 && address <= 8999:
 		if len(emm.ActivationStack) > 0 {
 			currentRecord := emm.ActivationStack[len(emm.ActivationStack)-1]
 			currentRecord.TempFloats[address] = value.(float64)
+		} else {
+			if emm.GlobalTempFloats == nil {
+				emm.GlobalTempFloats = make(map[int]float64)
+			}
+			emm.GlobalTempFloats[address] = value.(float64)
 		}
 	case address >= 9000 && address <= 9999:
 		if len(emm.ActivationStack) > 0 {
 			currentRecord := emm.ActivationStack[len(emm.ActivationStack)-1]
 			currentRecord.TempBools[address] = value.(bool)
+		} else {
+			if emm.GlobalTempBools == nil {
+				emm.GlobalTempBools = make(map[int]bool)
+			}
+			emm.GlobalTempBools[address] = value.(bool)
 		}
 
 	default:

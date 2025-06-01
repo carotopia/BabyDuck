@@ -16,10 +16,10 @@ func main() {
 
 	// Verificar argumentos de línea de comandos
 	if len(os.Args) < 2 {
-		fmt.Println("❌ Error: Debes proporcionar un archivo .bd para compilar")
-		fmt.Println("📖 Uso: go run main.go archivo.bd [debug]")
-		fmt.Println("📖 Ejemplo: go run main.go programa.bd")
-		fmt.Println("📖 Ejemplo con debug: go run main.go programa.bd debug")
+		fmt.Println("Error: Debes proporcionar un archivo .bd para compilar")
+		fmt.Println("Uso: go run main.go archivo.bd [debug]")
+		fmt.Println("Ejemplo: go run main.go programa.bd")
+		fmt.Println("Ejemplo con debug: go run main.go programa.bd debug")
 		os.Exit(1)
 	}
 
@@ -63,20 +63,17 @@ func readFile(filename string) (string, error) {
 func compileAndRun(sourceCode string, debug bool) {
 	fmt.Println("🌟 COMPILANDO...")
 
-	// 🔑 USAR TU PureVisitorParser EXISTENTE
 	parser := builder.NewPureVisitorParser(sourceCode, debug)
 
-	// 🔑 ESTO YA HACE LAS DOS PASADAS: DirectoryBuilder + Visitor
 	symbolTable, errors := parser.Parse()
 
-	// 🔧 VERIFICAR ERRORES DE COMPILACIÓN (SINTAXIS + SEMÁNTICA)
 	if len(errors) > 0 {
 		fmt.Println("🍓 ERRORES DE COMPILACIÓN:")
 		for i, err := range errors {
 			fmt.Printf("%d. %s\n", i+1, err)
 		}
 		fmt.Println("🍓 Compilación fallida. No se puede ejecutar el programa.")
-		return // 🔧 DETENER AQUÍ SI HAY ERRORES - NO CONTINUAR
+		return
 	}
 
 	fmt.Println("✅ Compilación exitosa!")
