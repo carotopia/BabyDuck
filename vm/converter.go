@@ -27,10 +27,7 @@ func ConvertQuadruples(compilerQuads []quads.Quadruple) []Quadruple {
 func ExtractConstants(dirBuilder *builder.DirectoryBuilder) map[int]interface{} {
 	constants := make(map[int]interface{})
 
-	// Extraer constantes reales de tu ConstantTable
 	if dirBuilder != nil && dirBuilder.ConstantTable != nil {
-		// Tu ConstantTable tiene el formato: "tipo|valor" -> dirección
-		// Necesitamos convertir a: dirección -> valor
 		for key, address := range dirBuilder.ConstantTable.Constants {
 			// Parsear la clave "tipo|valor"
 			if len(key) > 4 { // Mínimo "int|1"
@@ -39,7 +36,6 @@ func ExtractConstants(dirBuilder *builder.DirectoryBuilder) map[int]interface{} 
 					typ := parts[0]
 					valueStr := parts[1]
 
-					// Convertir el valor según el tipo
 					switch typ {
 					case "int":
 						if val, err := strconv.Atoi(valueStr); err == nil {
@@ -54,7 +50,6 @@ func ExtractConstants(dirBuilder *builder.DirectoryBuilder) map[int]interface{} 
 							constants[address] = val
 						}
 					case "string":
-						// Para strings, remover comillas si las tiene
 						if strings.HasPrefix(valueStr, "\"") && strings.HasSuffix(valueStr, "\"") {
 							constants[address] = valueStr[1 : len(valueStr)-1]
 						} else {

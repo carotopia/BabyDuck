@@ -50,7 +50,6 @@ func readFile(filename string) (string, error) {
 		return "", fmt.Errorf("el archivo '%s' no existe", filename)
 	}
 
-	// Leer el contenido del archivo
 	content, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return "", fmt.Errorf("no se pudo leer el archivo: %v", err)

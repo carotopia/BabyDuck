@@ -178,7 +178,7 @@ func (vm *VirtualMachine) getCurrentMemoryValue(address int) (interface{}, error
 	val, err := vm.currentMemory.GetValue(address)
 	if err != nil && vm.isTempAddress(address) {
 		if vm.debug {
-			vm.debugPrintln("    ⚠️ Temporal no encontrado en local, buscando en global:", address)
+			vm.debugPrintln("    Temporal no encontrado en local, buscando en global:", address)
 		}
 		return vm.globalMemory.GetValue(address)
 	}
@@ -228,12 +228,10 @@ func (vm *VirtualMachine) getValue(operand interface{}) interface{} {
 			return val
 		}
 
-		// 🔧 MEJOR MANEJO DE TEMPORALES NO ENCONTRADOS
 		if v >= 7000 && v <= 9999 {
 			if vm.debug {
 				vm.debugPrint("  ⚠️ TEMPORAL[", v, "] no encontrado - esto puede ser un error\n")
 			}
-			// No inicializar automáticamente, devolver error
 			return nil
 		}
 
@@ -271,20 +269,19 @@ func (vm *VirtualMachine) getValue(operand interface{}) interface{} {
 // setValue asigna un valor usando el sistema de memoria tipado
 func (vm *VirtualMachine) setValue(address interface{}, value interface{}) {
 	if addr, ok := address.(int); ok {
-		// 🔧 CONVERSIÓN AUTOMÁTICA SEGÚN RANGO DE MEMORIA
 		convertedValue := vm.convertValueForMemoryType(addr, value)
 
 		err := vm.setCurrentMemoryValue(addr, convertedValue)
 		if err != nil && vm.debug {
-			vm.debugPrintln("    ⚠️ Error setValue:", err)
+			vm.debugPrintln("     Error setValue:", err)
 		} else if vm.debug {
-			vm.debugPrintln("    ✅ Guardado memoria[", addr, "] =", convertedValue)
+			vm.debugPrintln("    Guardado memoria[", addr, "] =", convertedValue)
 		}
 	}
 }
 func (vm *VirtualMachine) Execute() error {
 	if len(vm.quadruples) == 0 {
-		vm.println("⚠️  No hay cuádruplos para ejecutar")
+		vm.println("️  No hay cuádruplos para ejecutar")
 		return nil
 	}
 
@@ -379,7 +376,6 @@ func (vm *VirtualMachine) executeERA(quad Quadruple) {
 		funcName = "unknown" // Fallback
 	}
 
-	// Crear contexto de ejecución
 	context := ExecutionContext{
 		FunctionName:   funcName,
 		ReturnAddress:  0,   // Se establecerá en GOSUB
@@ -440,7 +436,6 @@ func (vm *VirtualMachine) executeGosub(quad Quadruple) bool {
 
 	vm.copyParametersToLocalMemory(funcName)
 
-	// Saltar a la función
 	if funcAddr, exists := vm.functionTable[funcName]; exists {
 		if vm.debug {
 			vm.debugPrintln("  GOSUB: Llamando función", funcName, "PC:", vm.pc, "→", funcAddr, "(retorno a", context.ReturnAddress, ")")
@@ -499,7 +494,6 @@ func (vm *VirtualMachine) executeEndFunc() bool {
 	context := vm.executionStack[contextIndex]
 	vm.executionStack = vm.executionStack[:contextIndex]
 
-	// 🔧 USAR PopActivationRecord EN LUGAR DE CAMBIAR MEMORIA
 	vm.currentMemory.PopActivationRecord()
 
 	if vm.debug {
@@ -948,7 +942,7 @@ func (vm *VirtualMachine) Reset() {
 	vm.parameterStack = make([]interface{}, 0)
 
 	if vm.debug {
-		vm.debugPrintln("🔄 VM: Estado reiniciado para nueva ejecución")
+		vm.debugPrintln(" VM: Estado reiniciado para nueva ejecución")
 	}
 }
 func (vm *VirtualMachine) convertValueForMemoryType(address int, value interface{}) interface{} {
@@ -981,6 +975,5 @@ func (vm *VirtualMachine) convertValueForMemoryType(address int, value interface
 		return vm.toBool(value)
 	}
 
-	// Si no se puede convertir, devolver el valor original
 	return value
 }

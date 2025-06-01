@@ -102,7 +102,7 @@ func (emm *ExecutionMemoryMap) GetValue(address int) (interface{}, error) {
 			}
 		}
 
-	// Variables Temporales - 🔧 SOPORTAR GLOBALES Y LOCALES
+
 	case address >= 7000 && address <= 7999:
 		if len(emm.ActivationStack) > 0 {
 			// Buscar en temporales locales primero
@@ -164,7 +164,6 @@ func (emm *ExecutionMemoryMap) GetValue(address int) (interface{}, error) {
 	return nil, fmt.Errorf("no se puede leer la dirección %d", address)
 }
 
-// SetValue establece un valor en cualquier segmento de memoria
 // SetValue establece un valor en cualquier segmento de memoria
 func (emm *ExecutionMemoryMap) SetValue(address int, value interface{}) error {
 	switch {

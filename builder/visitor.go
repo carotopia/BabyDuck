@@ -57,7 +57,7 @@ func NewPureQuadrupleVisitor(funcDir *symbols.FunctionDirectory, constTable *sym
 func (v *PureQuadrupleVisitor) VisitProgram(ctx *grammar.ProgramContext) {
 	v.debugLog("=== Starting Program Quadruple Generation ===")
 
-	// Procesar funciones - CORRECCIÓN: usar Func_() con guión bajo
+
 	if ctx.AllFuncs() != nil {
 		for _, funcsCtx := range ctx.AllFuncs() {
 			// Hacer casting a FuncsContext primero, luego acceder a Func_()
@@ -127,11 +127,11 @@ func (v *PureQuadrupleVisitor) VisitStatement(ctx *grammar.StatementContext) {
 }
 
 func (v *PureQuadrupleVisitor) VisitCycle(ctx *grammar.CycleContext) {
-	v.debugLog("=== Processing While Loop ===")
+
 
 	// 1. Marcar inicio del loop (donde estará la condición)
 	loopStartPosition := v.quadQueue.Size()
-	v.debugLog("Loop start position: %d", loopStartPosition)
+
 
 	// 2. Evaluar condición del while - CORRECCIÓN: casting
 	if exprCtx, ok := ctx.Expression().(*grammar.ExpressionContext); ok && exprCtx != nil {
@@ -169,7 +169,7 @@ func (v *PureQuadrupleVisitor) VisitCycle(ctx *grammar.CycleContext) {
 	v.debugLog("=== While Loop Complete ===")
 }
 
-// ========== EXPRESIONES ==========
+
 
 func (v *PureQuadrupleVisitor) VisitExpression(ctx *grammar.ExpressionContext) *ExpressionResult {
 	v.debugLog("VisitExpression: %s", ctx.GetText())
@@ -182,7 +182,6 @@ func (v *PureQuadrupleVisitor) VisitExpression(ctx *grammar.ExpressionContext) *
 }
 
 func (v *PureQuadrupleVisitor) VisitRelExpr(ctx *grammar.Rel_exprContext) *ExpressionResult {
-	v.debugLog("VisitRelExpr: %s", ctx.GetText())
 
 	var leftResult *ExpressionResult
 	if addExprCtx, ok := ctx.Add_expr(0).(*grammar.Add_exprContext); ok && addExprCtx != nil {
@@ -207,9 +206,9 @@ func (v *PureQuadrupleVisitor) VisitRelExpr(ctx *grammar.Rel_exprContext) *Expre
 }
 
 func (v *PureQuadrupleVisitor) VisitAddExpr(ctx *grammar.Add_exprContext) *ExpressionResult {
-	v.debugLog("VisitAddExpr: %s", ctx.GetText())
 
-	// CORRECCIÓN: casting para term
+
+
 	var result *ExpressionResult
 	if termCtx, ok := ctx.Term(0).(*grammar.TermContext); ok && termCtx != nil {
 		result = v.VisitTerm(termCtx)
@@ -238,7 +237,6 @@ func (v *PureQuadrupleVisitor) VisitAddExpr(ctx *grammar.Add_exprContext) *Expre
 func (v *PureQuadrupleVisitor) VisitTerm(ctx *grammar.TermContext) *ExpressionResult {
 	v.debugLog("VisitTerm: %s", ctx.GetText())
 
-	// CORRECCIÓN: casting para factor
 	var result *ExpressionResult
 	if factorCtx, ok := ctx.Factor(0).(*grammar.FactorContext); ok && factorCtx != nil {
 		result = v.VisitFactor(factorCtx)
@@ -256,7 +254,6 @@ func (v *PureQuadrupleVisitor) VisitTerm(ctx *grammar.TermContext) *ExpressionRe
 		}
 
 		if result != nil && rightFactor != nil {
-			v.debugLog("Processing mul/div: %v %s %v", result.Address, operator, rightFactor.Address)
 			result = v.generateBinaryOperation(operator, result, rightFactor)
 		}
 	}
@@ -265,7 +262,6 @@ func (v *PureQuadrupleVisitor) VisitTerm(ctx *grammar.TermContext) *ExpressionRe
 }
 
 func (v *PureQuadrupleVisitor) VisitFactor(ctx *grammar.FactorContext) *ExpressionResult {
-	v.debugLog("VisitFactor: %s", ctx.GetText())
 
 	if ctx.Expression() != nil {
 		if exprCtx, ok := ctx.Expression().(*grammar.ExpressionContext); ok && exprCtx != nil {
@@ -330,7 +326,7 @@ func (v *PureQuadrupleVisitor) VisitValue(ctx *grammar.ValueContext) *Expression
 
 func (v *PureQuadrupleVisitor) VisitAssignment(ctx *grammar.AssignContext) {
 	variableName := ctx.ID().GetText()
-	v.debugLog("Assignment: %s", variableName)
+
 
 	// CORRECCIÓN: casting para expression
 	if exprCtx, ok := ctx.Expression().(*grammar.ExpressionContext); ok && exprCtx != nil {
@@ -385,7 +381,6 @@ func (v *PureQuadrupleVisitor) VisitPrintStatement(ctx *grammar.Print_stmtContex
 // ========== CONDICIONALES ==========
 
 func (v *PureQuadrupleVisitor) VisitCondition(ctx *grammar.ConditionContext) {
-	v.debugLog("=== Processing Condition ===")
 
 	if exprCtx, ok := ctx.Expression().(*grammar.ExpressionContext); ok && exprCtx != nil {
 		condResult := v.VisitExpression(exprCtx)
@@ -432,7 +427,6 @@ func (v *PureQuadrupleVisitor) VisitCondition(ctx *grammar.ConditionContext) {
 
 func (v *PureQuadrupleVisitor) VisitFunction(ctx *grammar.FuncContext) {
 	functionName := ctx.ID().GetText()
-	v.debugLog("Processing Function: %s", functionName)
 
 	err := v.Directory.EnterFunction(functionName)
 	if err != nil {
@@ -477,7 +471,6 @@ func (v *PureQuadrupleVisitor) VisitFunction(ctx *grammar.FuncContext) {
 
 func (v *PureQuadrupleVisitor) VisitFunctionCall(ctx *grammar.F_callContext) {
 	funcName := ctx.ID().GetText()
-	v.debugLog("Processing Function Call: %s", funcName)
 
 	numArgs := 0
 	if ctx.Arg_list() != nil {

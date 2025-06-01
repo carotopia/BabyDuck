@@ -45,7 +45,7 @@ type FunctionInfo struct {
 	Variables      VariableTable
 }
 
-// 🔧 CORREGIR ValidateFunctionCall en functions.go
+
 
 func (fd *FunctionDirectory) ValidateFunctionCall(name string, numArgs int) error {
 	funcInfo, exists := fd.Directory[name]
@@ -80,20 +80,15 @@ func (fd *FunctionDirectory) DebugFunctionInfo(functionName string) {
 	fmt.Printf("[DEBUG] ========================\n")
 }
 
-// 🔧 ALTERNATIVA: Si quieres seguir contando por direcciones, usa un rango más específico
 func (fd *FunctionDirectory) ValidateFunctionCallByRange(name string, numArgs int) error {
 	funcInfo, exists := fd.Directory[name]
 	if !exists {
 		return fmt.Errorf("error: function '%s' is not declared", name)
 	}
 
-	// 🔧 CONTAR SOLO LAS PRIMERAS VARIABLES EN EL RANGO LOCAL
-	// Los parámetros siempre son las primeras variables que se agregan a una función
-	// y tienen direcciones consecutivas empezando en 4000, 5000, 6000
 	paramCount := 0
 	minAddress := 10000 // Encontrar la dirección mínima
 
-	// Encontrar la dirección más baja (primer parámetro)
 	for _, variable := range funcInfo.Variables {
 		if variable.MemoryAddress >= 4000 && variable.MemoryAddress < 7000 {
 			if variable.MemoryAddress < minAddress {
@@ -102,8 +97,7 @@ func (fd *FunctionDirectory) ValidateFunctionCallByRange(name string, numArgs in
 		}
 	}
 
-	// Contar variables consecutivas desde la dirección más baja
-	// Los parámetros son siempre los primeros y consecutivos
+
 	if minAddress < 10000 {
 		baseAddress := minAddress - (minAddress % 1000) // 4000, 5000, o 6000
 		for addr := baseAddress; addr < baseAddress+100; addr++ {
@@ -133,7 +127,6 @@ func (fd *FunctionDirectory) Error() {
 
 }
 
-// Contadores para asignar direcciones manualmente
 var globalIntCounter = 1000
 var globalFloatCounter = 2000
 var globalBoolCounter = 3000
@@ -223,7 +216,6 @@ func (fd *FunctionDirectory) CountLocalVariables(functionName string) int {
 
 	count := 0
 	for _, variable := range funcInfo.Variables {
-		// Contar solo variables locales (rango 4000-6999)
 		if variable.MemoryAddress >= 4000 && variable.MemoryAddress <= 6999 {
 			count++
 		}
@@ -241,7 +233,7 @@ func (fd *FunctionDirectory) CountTempVariables(functionName string) int {
 
 	count := 0
 	for _, variable := range funcInfo.Variables {
-		// Contar temporales (rango 7000-9999)
+
 		if variable.MemoryAddress >= 7000 && variable.MemoryAddress <= 9999 {
 			count++
 		}
@@ -297,7 +289,6 @@ func (fd *FunctionDirectory) AddFunctionParameter(funcName, paramName, paramType
 		return fmt.Errorf("error: parámetro '%s' ya declarado en función '%s'", paramName, funcName)
 	}
 
-	// 🔧 DIRECCIÓN BASADA EN NÚMERO DE PARÁMETROS, NO CONTADOR GLOBAL
 	paramCount := len(funcInfo.Params)
 	var address int
 	switch paramType {
@@ -327,7 +318,6 @@ func (fd *FunctionDirectory) EnterFunction(functionName string) error {
 		return fmt.Errorf("error: función '%s' no declarada", functionName)
 	}
 
-	// 🔧 VERIFICAR QUE NO ESTEMOS YA EN LA FUNCIÓN
 	currentScope := fd.GetCurrentScope()
 	if currentScope != functionName {
 		fd.CurrentScope = append(fd.CurrentScope, functionName)

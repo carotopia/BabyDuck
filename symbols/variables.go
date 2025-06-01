@@ -13,9 +13,7 @@ type Variable struct {
 type VariableTable map[string]Variable
 
 // AddVariable adds a new variable to the current scope, and checks if there is an current scope defined
-// If the variable is already in the current scope returns error
-// If the variable is missing an attribute returns error
-// ACTUALIZAR EL MÉTODO AddVariable EN TU variables.go:
+
 
 func (fd *FunctionDirectory) AddVariable(name string, varType string) error {
 	if len(fd.CurrentScope) == 0 {
@@ -63,7 +61,7 @@ func (fd *FunctionDirectory) AddVariable(name string, varType string) error {
 
 		switch varType {
 		case "int":
-			address = 4000 + paramCount + localVarCount // ✅ Empezar DESPUÉS de parámetros
+			address = 4000 + paramCount + localVarCount
 		case "float":
 			address = 5000 + paramCount + localVarCount
 		case "bool":
